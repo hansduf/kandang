@@ -1,0 +1,100 @@
+BAB 7 — Grafik dengan Chart.js
+7.1  Install Chart.js
+# Via npm (recommended)
+npm install chart.js
+
+# Atau via CDN langsung di blade (alternatif simpel)
+# Tambahkan di layout sebelum </body>:
+# <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+7.2  Data Grafik di Controller
+// app/Http/Controllers/LaporanController.php
+
+public function produksi(Request $request) {
+    $bulan = $request->bulan ?? now()->month;
+    $tahun = $request->tahun ?? now()->year;
+
+    // Data produksi per hari dalam bulan
+    $data = ProduksiTelur::whereMonth('tanggal_produksi', $bulan)
+        ->whereYear('tanggal_produksi', $tahun)
+        ->selectRaw('DATE(tanggal_produksi) as tanggal, SUM(jumlah_butir) as total')
+        ->groupBy('tanggal')
+        ->orderBy('tanggal')
+        ->get();
+
+    // Data per kandang
+    $perKandang = ProduksiTelur::with('kandang')
+        ->whereMonth('tanggal_produksi', $bulan)
+        ->whereYear('tanggal_produksi', $tahun)
+        ->selectRaw('kandang_id, SUM(jumlah_butir) as total')
+        ->groupBy('kandang_id')
+        ->get();
+
+    return view('laporan.produksi', compact('data', 'perKandang', 'bulan', 'tahun'));
+}
+7.3  Grafik Garis — Produksi Harian
+<!-- resources/views/laporan/produksi.blade.php -->
+<x-app-layout>
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">Grafik Produksi Harian</h2>
+        <canvas id="chartProduksi" height="100"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const labels = @json($data->pluck('tanggal'));
+        const values = @json($data->pluck('total'));
+
+        new Chart(document.getElementById('chartProduksi'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Produksi (Butir)',
+                    data: values,
+                    borderColor: '#2E75B6',
+                    backgroundColor: 'rgba(46, 117, 182, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Produksi Telur Harian' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</x-app-layout>
+7.4  Grafik Donut — Produksi per Kandang
+<div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-bold mb-4">Produksi per Kandang</h2>
+    <canvas id="chartKandang" height="120"></canvas>
+</div>
+
+<script>
+    const kandangLabels = @json($perKandang->map(fn($k) => $k->kandang->nama_kandang));
+    const kandangData   = @json($perKandang->pluck('total'));
+
+    new Chart(document.getElementById('chartKandang'), {
+        type: 'doughnut',
+        data: {
+            labels: kandangLabels,
+            datasets: [{
+                data: kandangData,
+                backgroundColor: ['#2E75B6', '#1F4E79', '#70AD47', '#ED7D31'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>

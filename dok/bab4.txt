@@ -1,0 +1,59 @@
+BAB 4 — Role & Permission (Spatie)
+Sistem ini memiliki 2 role: pemilik (akses penuh) dan pekerja (hanya input produksi kandangnya sendiri).
+4.1  Setup Spatie Permission
+# Publish migration Spatie
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+
+# Jalankan migration Spatie
+php artisan migrate
+4.2  Tambahkan HasRoles ke Model User
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable {
+    use HasFactory, Notifiable, HasRoles;
+    // ...
+}
+4.3  Buat Seeder Role & User
+php artisan make:seeder RoleSeeder
+php artisan make:seeder UserSeeder
+// database/seeders/RoleSeeder.php
+use Spatie\Permission\Models\Role;
+
+public function run() {
+    Role::create(['name' => 'pemilik', 'guard_name' => 'web']);
+    Role::create(['name' => 'pekerja', 'guard_name' => 'web']);
+}
+// database/seeders/UserSeeder.php
+public function run() {
+    $pemilik = User::create([
+        'name'     => 'Hans Jaya',
+        'email'    => 'pemilik@hansjaya.com',
+        'password' => bcrypt('password123'),
+        'role'     => 'pemilik',
+    ]);
+    $pemilik->assignRole('pemilik');
+}
+php artisan db:seed --class=RoleSeeder
+php artisan db:seed --class=UserSeeder
+4.4  Middleware Role di Route
+// routes/web.php
+
+// Route khusus pemilik
+Route::middleware(['auth', 'role:pemilik'])->group(function () {
+    Route::resource('kandang', KandangController::class);
+    Route::resource('harga', HargaTelurController::class);
+    Route::resource('penjualan', PenjualanController::class);
+    Route::get('laporan/produksi', [LaporanController::class, 'produksi']);
+    Route::get('laporan/penjualan', [LaporanController::class, 'penjualan']);
+    Route::resource('pengaturan', PengaturanController::class);
+});
+
+// Route khusus pekerja
+Route::middleware(['auth', 'role:pekerja'])->group(function () {
+    Route::resource('produksi', ProduksiTelurController::class)->only(['index', 'create', 'store']);
+});
+
+// Dashboard (semua role)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});

@@ -1,0 +1,397 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\DetailPenjualan;
+use App\Models\HargaTelur;
+use App\Models\Pengaturan;
+use App\Models\Penjualan;
+use App\Models\ProduksiTelur;
+use App\Models\StokTelur;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PenjualanController extends Controller
+{
+    public function index()
+    {
+        $penjualan = Penjualan::with(['user', 'detail' => function($q) {
+            $q->with('hargaTelur');
+        }])
+            ->latest('tanggal_jual')
+            ->paginate(10);
+
+        return view('penjualan.index', compact('penjualan'));
+    }
+
+    public function create()
+    {
+        $hargaTelur = HargaTelur::aktif()->get();
+
+        return view('penjualan.create', compact('hargaTelur'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'tanggal_jual'  => 'required|date',
+            'nama_pembeli'  => 'nullable|string|max:100',
+            'items'         => 'required|array|min:1',
+            'items.*.harga_telur_id' => 'required|exists:harga_telur,id',
+            'items.*.satuan_jual'    => 'required|in:butir,kg',
+            'items.*.jumlah_jual'    => 'required|numeric|min:0',
+            'items.*.jumlah_butir'   => 'nullable|numeric|min:1',
+            'items.*.jumlah_kg'      => 'nullable|numeric|min:0.01',
+        ]);
+
+        // Ensure jumlah_butir or jumlah_kg is provided
+        foreach ($request->items as $index => $item) {
+            if (empty($item['jumlah_butir']) && empty($item['jumlah_kg'])) {
+                return redirect()->back()
+                    ->with('error', 'Jumlah perkiraan (KG atau Butir) harus diisi pada item ' . ($index + 1))
+                    ->withInput();
+            }
+        }
+
+        // Cek stok sebelum proses
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+        $stokTersedia = $this->hitungStokTersedia(auth()->id());
+
+        $totalButirDijual = 0;
+        foreach ($request->items as $item) {
+            $jumlahButir = !empty($item['jumlah_butir']) 
+                ? (int) $item['jumlah_butir']
+                : (int) round($item['jumlah_kg'] * $konversi);
+            $totalButirDijual += $jumlahButir;
+        }
+
+        if ($totalButirDijual > $stokTersedia) {
+            return redirect()->back()
+                ->with('warning', "⚠️ Stok tidak cukup! Stok tersedia: {$stokTersedia} butir, diminta: {$totalButirDijual} butir")
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($request, $konversi) {
+            // Buat penjualan
+            $penjualan = Penjualan::create([
+                'user_id'      => auth()->id(),
+                'tanggal_jual' => $request->tanggal_jual,
+                'nama_pembeli' => $request->nama_pembeli,
+                'total_harga'  => 0,
+            ]);
+
+            $total = 0;
+            $totalButir = 0;
+
+            foreach ($request->items as $item) {
+                $harga = HargaTelur::findOrFail($item['harga_telur_id']);
+                
+                // Gunakan jumlah_butir atau hitung dari jumlah_kg
+                $jumlahButir = !empty($item['jumlah_butir']) 
+                    ? (int) $item['jumlah_butir']
+                    : (int) round($item['jumlah_kg'] * $konversi);
+                
+                // Tentukan harga satuan
+                $hargaSatuan = $item['satuan_jual'] === 'kg'
+                    ? $harga->harga_per_kg
+                    : $harga->harga_per_butir;
+
+                // Hitung jumlah kg
+                $jumlahKg = round($jumlahButir / $konversi, 3);
+                    
+                // Untuk satuan kg, jumlah_jual sudah dalam decimal (misal 1.024 kg)
+                // Jadi subtotal = jumlah (kg) × harga_per_kg
+                $subtotal = $item['jumlah_jual'] * $hargaSatuan;
+                
+                $total   += $subtotal;
+                $totalButir += $jumlahButir;
+
+                // Buat detail penjualan
+                DetailPenjualan::create([
+                    'penjualan_id'   => $penjualan->id,
+                    'harga_telur_id' => $item['harga_telur_id'],
+                    'satuan_jual'    => $item['satuan_jual'],
+                    'jumlah_jual'    => $item['jumlah_jual'],
+                    'jumlah_butir'   => $jumlahButir,
+                    'jumlah_kg'      => round($jumlahKg, 3),
+                    'harga_satuan'   => $hargaSatuan,
+                    'subtotal'       => $subtotal,
+                ]);
+            }
+
+            // Update total harga penjualan
+            $penjualan->update(['total_harga' => $total]);
+        });
+
+        return redirect()->route('penjualan.index')
+                         ->with('success', 'Transaksi penjualan berhasil disimpan!');
+    }
+
+    /**
+     * Hitung stok tersedia dengan sistem carryover bulanan
+     */
+    private function hitungStokTersedia($userId = null)
+    {
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        
+        // Produksi bulan ini
+        $produksiBulan = \App\Models\ProduksiTelur::whereYear('tanggal_produksi', $currentYear)
+            ->whereMonth('tanggal_produksi', $currentMonth)
+            ->sum('jumlah_butir');
+        
+        // Penjualan bulan ini
+        $penjualanBulan = DetailPenjualan::whereHas('penjualan', function($q) use ($currentYear, $currentMonth) {
+            $q->whereYear('tanggal_jual', $currentYear)
+              ->whereMonth('tanggal_jual', $currentMonth);
+        })->sum('jumlah_butir');
+        
+        // Hitung dari bulan-bulan sebelumnya untuk opening balance
+        $openingBalance = $this->hitungOpeningBalance($currentYear, $currentMonth);
+        
+        // Stok = Opening Balance + Produksi - Penjualan
+        $stokTersedia = $openingBalance + $produksiBulan - $penjualanBulan;
+        
+        return max(0, $stokTersedia); // Jangan negatif
+    }
+
+    /**
+     * Hitung opening balance bulan ini berdasarkan closing balance bulan lalu
+     */
+    private function hitungOpeningBalance($year, $month)
+    {
+        $bulanLalu = $month - 1;
+        $tahunLalu = $year;
+        
+        if ($bulanLalu == 0) {
+            $bulanLalu = 12;
+            $tahunLalu = $year - 1;
+        }
+        
+        // Produksi bulan lalu
+        $produksiBulanLalu = \App\Models\ProduksiTelur::whereYear('tanggal_produksi', $tahunLalu)
+            ->whereMonth('tanggal_produksi', $bulanLalu)
+            ->sum('jumlah_butir');
+        
+        // Penjualan bulan lalu
+        $penjualanBulanLalu = DetailPenjualan::whereHas('penjualan', function($q) use ($tahunLalu, $bulanLalu) {
+            $q->whereYear('tanggal_jual', $tahunLalu)
+              ->whereMonth('tanggal_jual', $bulanLalu);
+        })->sum('jumlah_butir');
+        
+        // Closing bulan lalu = Opening bulan lalu + Produksi - Penjualan
+        $closingBulanLalu = $produksiBulanLalu - $penjualanBulanLalu;
+        
+        // Jika sebelum bulan lalu ada data, rekursi
+        if ($bulanLalu == 1) {
+            // Ini opening balance bulan pertama (Januari)
+            return max(0, $closingBulanLalu);
+        }
+        
+        return $this->hitungOpeningBalance($tahunLalu, $bulanLalu) + $closingBulanLalu;
+    }
+                    'harga_telur_id' => $item['harga_telur_id'],
+                    'satuan_jual'    => $item['satuan_jual'],
+                    'jumlah_jual'    => $item['jumlah_jual'],
+                    'jumlah_butir'   => $jumlahButir,
+                    'jumlah_kg'      => round($jumlahKg, 3),
+                    'harga_satuan'   => $hargaSatuan,
+                    'subtotal'       => $subtotal,
+                ]);
+            }
+
+            // Update total harga penjualan
+            $penjualan->update(['total_harga' => $total]);
+
+            // Kurangi stok
+            $stok = StokTelur::first();
+            if ($stok) {
+                $stok->decrement('stok_butir', $totalButir);
+                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
+                $stok->save();
+            }
+        });
+
+        return redirect()->route('penjualan.index')
+                         ->with('success', 'Transaksi penjualan berhasil disimpan!');
+    }
+
+    public function show(string $id)
+    {
+        $penjualan = Penjualan::with('user', 'detail.hargaTelur')->findOrFail($id);
+        return view('penjualan.show', compact('penjualan'));
+    }
+
+    public function edit(string $id)
+    {
+        $penjualan = Penjualan::with('detail')->findOrFail($id);
+        $hargaTelur = HargaTelur::where('status', 'aktif')->get();
+        return view('penjualan.edit', compact('penjualan', 'hargaTelur'));
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $penjualan = Penjualan::with('detail')->findOrFail($id);
+
+        $request->validate([
+            'tanggal_jual'  => 'required|date',
+            'nama_pembeli'  => 'nullable|string|max:100',
+            'items'         => 'required|array|min:1',
+            'items.*.harga_telur_id' => 'required|exists:harga_telur,id',
+            'items.*.satuan_jual'    => 'required|in:butir,kg',
+            'items.*.jumlah_jual'    => 'required|numeric|min:0',
+            'items.*.jumlah_butir'   => 'required|numeric|min:1',
+        ]);
+
+        // Cek stok dengan perhitungan yang sudah ada sebelumnya
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+        $oldTotalButir = $penjualan->detail->sum('jumlah_butir');
+        
+        $totalButirDijual = 0;
+        foreach ($request->items as $item) {
+            $jumlahButir = (int) $item['jumlah_butir'];
+            $totalButirDijual += $jumlahButir;
+        }
+
+        // Restore stok lama, cek stok baru
+        $stok = StokTelur::first();
+        $stokSaat = $stok ? $stok->stok_butir + $oldTotalButir : $oldTotalButir;
+
+        if ($totalButirDijual > $stokSaat) {
+            return redirect()->back()
+                ->with('warning', "⚠️ Stok tidak cukup! Stok tersedia setelah restore: {$stokSaat} butir, diminta: {$totalButirDijual} butir")
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($request, $penjualan, $totalButirDijual, $oldTotalButir, $konversi) {
+            // Update penjualan header
+            $penjualan->update([
+                'tanggal_jual' => $request->tanggal_jual,
+                'nama_pembeli' => $request->nama_pembeli,
+            ]);
+
+            // Hapus detail lama
+            $penjualan->detail()->delete();
+
+            $total = 0;
+            $totalButir = 0;
+
+            // Process item baru
+            foreach ($request->items as $item) {
+                $harga = HargaTelur::findOrFail($item['harga_telur_id']);
+                
+                // Gunakan jumlah_butir dari form (manual input user)
+                $jumlahButir = (int) $item['jumlah_butir'];
+                
+                $hargaSatuan = $item['satuan_jual'] === 'kg'
+                    ? $harga->harga_per_kg
+                    : $harga->harga_per_butir;
+
+                $jumlahKg = round($jumlahButir / $konversi, 3);
+                    
+                // Untuk satuan kg, jumlah_jual sudah dalam decimal (misal 1.024 kg)
+                // Jadi subtotal = jumlah (kg) × harga_satuan
+                $subtotal = $item['jumlah_jual'] * $hargaSatuan;
+                
+                $total   += $subtotal;
+                $totalButir += $jumlahButir;
+
+                DetailPenjualan::create([
+                    'penjualan_id'   => $penjualan->id,
+                    'harga_telur_id' => $item['harga_telur_id'],
+                    'satuan_jual'    => $item['satuan_jual'],
+                    'jumlah_jual'    => $item['jumlah_jual'],
+                    'jumlah_butir'   => $jumlahButir,
+                    'jumlah_kg'      => round($jumlahKg, 3),
+                    'harga_satuan'   => $hargaSatuan,
+                    'subtotal'       => $subtotal,
+                ]);
+            }
+
+            // Update total harga
+            $penjualan->update(['total_harga' => $total]);
+
+            // Update stok
+            $stok = StokTelur::first();
+            if ($stok) {
+                // Restore yang lama
+                $stok->increment('stok_butir', $oldTotalButir);
+                // Kurangi yang baru
+                $stok->decrement('stok_butir', $totalButir);
+                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
+                $stok->save();
+            }
+        });
+
+        return redirect()->route('penjualan.show', $penjualan)
+                         ->with('success', 'Transaksi penjualan berhasil diperbarui!');
+    }
+
+    public function destroy(string $id)
+    {
+        $penjualan = Penjualan::findOrFail($id);
+
+        DB::transaction(function () use ($penjualan) {
+            // Restore stok
+            $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+            $totalButir = $penjualan->detail->sum('jumlah_butir');
+
+            $stok = StokTelur::first();
+            if ($stok) {
+                $stok->increment('stok_butir', $totalButir);
+                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
+                $stok->save();
+            }
+
+            // Delete details dan penjualan
+            $penjualan->detail()->delete();
+            $penjualan->delete();
+        });
+
+        return redirect()->route('penjualan.index')
+                         ->with('success', 'Transaksi penjualan berhasil dihapus!');
+    }
+
+    public function getHargaByDate(Request $request)
+    {
+        $tanggal = $request->query('tanggal', now()->toDateString());
+        
+        // Get latest aktif harga for each jenis_harga on or before the given date
+        $hargaTelur = HargaTelur::where('status', 'aktif')
+            ->where('tanggal_berlaku', '<=', $tanggal)
+            ->where(function($q) use ($tanggal) {
+                $q->whereNull('tanggal_akhir')
+                  ->orWhere('tanggal_akhir', '>=', $tanggal);
+            })
+            ->orderByDesc('tanggal_berlaku')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('jenis_harga')
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $hargaTelur->map(function($h) {
+                return [
+                    'id'            => $h->id,
+                    'jenis_harga'   => $h->jenis_harga,
+                    'harga_per_kg'  => $h->harga_per_kg,
+                    'harga_per_butir' => $h->harga_per_butir,
+                    'display' => 'Rp ' . number_format($h->harga_per_kg, 0, ',', '.') . '/kg - ' . ucfirst($h->jenis_harga),
+                ];
+            })->toArray(),
+        ]);
+    }
+
+    public function getStok()
+    {
+        $stok = StokTelur::first();
+        
+        return response()->json([
+            'success' => true,
+            'stok_butir' => $stok->stok_butir ?? 0,
+            'stok_kg' => $stok->stok_kg ?? 0,
+        ]);
+    }
+}

@@ -1,0 +1,136 @@
+BAB 6 — Layout Blade & Tailwind CSS v4
+6.1  Struktur Folder Views
+resources/views/
+├── auth/               → login, register (dari Breeze)
+├── layouts/
+│   ├── app.blade.php   → layout utama (sidebar + navbar)
+│   └── guest.blade.php → layout halaman auth
+├── components/
+│   ├── sidebar.blade.php
+│   ├── navbar.blade.php
+│   ├── card.blade.php
+│   └── alert.blade.php
+├── dashboard/index.blade.php
+├── kandang/
+├── produksi/
+├── harga/
+├── penjualan/
+├── stok/
+├── laporan/
+└── pengaturan/
+6.2  Layout Utama (app.blade.php)
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config('app.name') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <x-sidebar />
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-auto">
+            <x-navbar />
+            <main class="flex-1 p-6">
+                <!-- Flash Message -->
+                @if(session('success'))
+                    <div class="mb-4 p-4 bg-green-100 text-green-800 rounded-lg">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                {{ $slot }}
+            </main>
+        </div>
+    </div>
+</body>
+</html>
+6.3  Sidebar Component
+<!-- resources/views/components/sidebar.blade.php -->
+<div class="w-64 bg-blue-900 text-white flex flex-col min-h-screen">
+    <!-- Logo -->
+    <div class="p-6 border-b border-blue-700">
+        <h1 class="text-lg font-bold">Hans Jaya</h1>
+        <p class="text-blue-300 text-sm">Poultry Farm</p>
+    </div>
+
+    <!-- Menu -->
+    <nav class="flex-1 p-4 space-y-1">
+        <a href="{{ route('dashboard') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition">
+            Dashboard
+        </a>
+        @role('pemilik')
+        <a href="{{ route('kandang.index') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition">
+            Kandang
+        </a>
+        @endrole
+        <a href="{{ route('produksi.index') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition">
+            Produksi Telur
+        </a>
+        @role('pemilik')
+        <a href="{{ route('penjualan.index') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition">
+            Penjualan
+        </a>
+        <a href="{{ route('laporan.produksi') }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition">
+            Laporan
+        </a>
+        @endrole
+    </nav>
+</div>
+6.4  Contoh Halaman CRUD (Tabel dengan Tailwind)
+<!-- resources/views/kandang/index.blade.php -->
+<x-app-layout>
+    <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-800">Data Kandang</h2>
+            <a href="{{ route('kandang.create') }}"
+               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                + Tambah Kandang
+            </a>
+        </div>
+
+        <table class="w-full text-sm text-left">
+            <thead class="bg-blue-50 text-blue-800 uppercase text-xs">
+                <tr>
+                    <th class="px-4 py-3">No</th>
+                    <th class="px-4 py-3">Nama Kandang</th>
+                    <th class="px-4 py-3">Jumlah Ayam</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($kandang as $k)
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3">{{ $loop->iteration }}</td>
+                    <td class="px-4 py-3 font-medium">{{ $k->nama_kandang }}</td>
+                    <td class="px-4 py-3">{{ number_format($k->jumlah_ayam) }} ekor</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-full text-xs
+                            {{ $k->status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                            {{ ucfirst($k->status) }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="{{ route('kandang.edit', $k) }}"
+                           class="text-blue-600 hover:underline">Edit</a>
+                        <form method="POST" action="{{ route('kandang.destroy', $k) }}">
+                            @csrf @method('DELETE')
+                            <button class="text-red-500 hover:underline">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</x-app-layout>

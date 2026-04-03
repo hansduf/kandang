@@ -1,0 +1,81 @@
+BAB 9 — Dashboard & Ringkasan Data
+9.1  DashboardController
+// app/Http/Controllers/DashboardController.php
+
+public function index() {
+    $stok = StokTelur::first();
+
+    // Produksi hari ini
+    $produksiHariIni = ProduksiTelur::whereDate('tanggal_produksi', today())
+        ->sum('jumlah_butir');
+
+    // Penjualan bulan ini
+    $penjualanBulanIni = Penjualan::whereMonth('tanggal_jual', now()->month)
+        ->whereYear('tanggal_jual', now()->year)
+        ->sum('total_harga');
+
+    // Jumlah kandang aktif
+    $jumlahKandang = Kandang::where('status', 'aktif')->count();
+
+    // Grafik 7 hari terakhir
+    $produksi7Hari = ProduksiTelur::whereBetween('tanggal_produksi', [
+            now()->subDays(6), now()
+        ])
+        ->selectRaw('DATE(tanggal_produksi) as tgl, SUM(jumlah_butir) as total')
+        ->groupBy('tgl')->orderBy('tgl')->get();
+
+    return view('dashboard.index', compact(
+        'stok', 'produksiHariIni', 'penjualanBulanIni', 'jumlahKandang', 'produksi7Hari'
+    ));
+}
+9.2  Tampilan Dashboard (Card + Grafik)
+<!-- resources/views/dashboard/index.blade.php -->
+<x-app-layout>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm">Stok Telur</p>
+            <p class="text-2xl font-bold text-blue-700">{{ number_format($stok->stok_butir) }}</p>
+            <p class="text-sm text-gray-400">{{ number_format($stok->stok_kg, 1) }} kg</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-green-500">
+            <p class="text-gray-500 text-sm">Produksi Hari Ini</p>
+            <p class="text-2xl font-bold text-green-700">{{ number_format($produksiHariIni) }}</p>
+            <p class="text-sm text-gray-400">butir</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-yellow-500">
+            <p class="text-gray-500 text-sm">Penjualan Bulan Ini</p>
+            <p class="text-2xl font-bold text-yellow-700">
+                Rp {{ number_format($penjualanBulanIni) }}
+            </p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5 border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm">Kandang Aktif</p>
+            <p class="text-2xl font-bold text-purple-700">{{ $jumlahKandang }}</p>
+            <p class="text-sm text-gray-400">kandang</p>
+        </div>
+    </div>
+
+    <!-- Grafik 7 hari -->
+    <div class="bg-white rounded-xl shadow p-6">
+        <h3 class="font-bold mb-4">Produksi 7 Hari Terakhir</h3>
+        <canvas id="chartDashboard" height="80"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        new Chart(document.getElementById('chartDashboard'), {
+            type: 'bar',
+            data: {
+                labels: @json($produksi7Hari->pluck('tgl')),
+                datasets: [{
+                    label: 'Produksi (Butir)',
+                    data: @json($produksi7Hari->pluck('total')),
+                    backgroundColor: 'rgba(46, 117, 182, 0.7)',
+                    borderRadius: 6,
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+    </script>
+</x-app-layout>

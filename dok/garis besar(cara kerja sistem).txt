@@ -1,0 +1,132 @@
+Rencana Judul Tugas Akhir	:	Rancang Bangun Sistem Informasi Manajemen dan Monitoring Produksi serta Penjualan Telur Ayam Petelur Berbasis Web pada Hans Jaya Poultry Farm
+Latar Belakang Pemilihan Judul Tugas Akhir	:	Peternakan ayam petelur memerlukan pencatatan data yang teratur, terutama terkait produksi telur dan penjualan. Namun, pada praktiknya masih banyak peternakan yang melakukan pencatatan secara manual, sehingga data produksi, stok, dan penjualan sering tidak terdokumentasi dengan baik. Hal ini menyebabkan pemilik usaha kesulitan dalam memantau perkembangan produksi serta mengevaluasi hasil penjualan secara berkala.
+Hans Jaya Poultry Farm merupakan peternakan ayam petelur yang memiliki lebih dari satu kandang dengan jumlah ayam dan tingkat produksi yang berbeda pada setiap kandang. Produksi telur dicatat setiap hari oleh pekerja kandang, sedangkan penjualan telur dilakukan oleh pemilik usaha. Selain itu, telur diproduksi dalam satuan butir, namun dalam proses penjualan dapat menggunakan satuan butir maupun kilogram, sehingga sering terjadi perbedaan pencatatan antara produksi dan penjualan.
+Berdasarkan permasalahan tersebut, diperlukan sebuah sistem informasi berbasis web yang mampu mengelola manajemen dan monitoring produksi serta penjualan telur secara terintegrasi. Sistem ini diharapkan dapat membantu pemilik peternakan dalam memantau produksi per kandang, mengelola stok telur, serta menyajikan laporan dalam bentuk tabel dan grafik sebagai bahan evaluasi usaha.
+Rumusan Masalah	:	1.	Bagaimana merancang dan membangun sistem informasi manajemen dan monitoring produksi serta penjualan telur ayam petelur berbasis web?
+2.	Bagaimana sistem mencatat produksi telur harian pada setiap kandang?
+3.	Bagaimana sistem melakukan pencatatan penjualan telur yang terintegrasi dengan stok?
+4.	Bagaimana sistem menyajikan laporan produksi dan penjualan dalam bentuk tabel dan grafik?
+5.	Bagaimana sistem mendukung monitoring kinerja produksi dan penjualan pada Hans Jaya Poultry Farm?
+Kontribusi Tugas Akhir	:	Tugas akhir ini diharapkan dapat memberikan kontribusi nyata dalam membantu pengelolaan usaha peternakan ayam petelur, khususnya dalam hal pencatatan dan pemantauan produksi serta penjualan telur. Sistem informasi yang dibangun memungkinkan pemilik peternakan untuk mencatat produksi telur harian secara terstruktur berdasarkan masing-masing kandang, sehingga data produksi dapat dipantau dengan lebih mudah dan akurat.
+Selain itu, sistem ini juga membantu proses pencatatan penjualan telur yang terintegrasi dengan data stok, sehingga pemilik dapat mengetahui jumlah telur yang tersedia serta hasil penjualan dalam periode tertentu. Dengan adanya laporan produksi dan penjualan yang disajikan dalam bentuk tabel dan grafik, pemilik peternakan dapat melakukan evaluasi usaha secara berkala dan mengambil keputusan berdasarkan data yang terdokumentasi dengan baik. Secara umum, sistem ini diharapkan dapat meningkatkan efisiensi pengelolaan data dan mengurangi kesalahan pencatatan yang sering terjadi pada sistem manual.
+Teori yang digunakan	:	1.	Sistem Informasi Manajemen Peternakan
+Sistem informasi manajemen peternakan merupakan sistem yang digunakan untuk mengelola data operasional peternakan secara terstruktur, mulai dari pencatatan produksi hingga pelaporan hasil usaha. Sistem ini bertujuan untuk membantu pemilik peternakan dalam memantau kondisi usaha dan mengambil keputusan berdasarkan data yang tercatat.
+ Dalam tugas akhir ini, sistem informasi manajemen digunakan untuk mengelola data produksi telur dan penjualan telur pada beberapa kandang secara terpusat.
+2.	Manajemen Produksi Telur Ayam Petelur
+Manajemen produksi telur ayam petelur merupakan kegiatan pencatatan dan pengendalian hasil produksi telur yang dihasilkan setiap hari. Produksi telur biasanya dipengaruhi oleh jumlah ayam, kondisi kandang, dan manajemen pemeliharaan.
+ Pada sistem yang dirancang, produksi telur dicatat oleh pekerja kandang berdasarkan masing-masing kandang, sehingga pemilik dapat mengetahui jumlah produksi telur per kandang dan total produksi keseluruhan.
+3.	Pencatatan Produksi Telur Multi Kandang
+Pencatatan produksi multi kandang adalah proses pengelolaan data produksi telur dari lebih dari satu kandang dalam satu sistem. Setiap kandang memiliki identitas tersendiri, seperti nama kandang dan jumlah ayam.
+ Teori ini digunakan sebagai dasar perancangan sistem agar data produksi telur dapat dibedakan berdasarkan kandang, sehingga memudahkan monitoring dan evaluasi performa tiap kandang.
+4.	Konversi Satuan Produksi Telur (Butir dan Kilogram)
+Dalam praktik peternakan, telur dapat dicatat dan dijual dalam satuan butir maupun kilogram. Oleh karena itu, diperlukan konversi satuan untuk menyamakan data produksi dan penjualan.
+ Pada sistem ini digunakan konsep estimasi konversi telur, di mana satu kilogram telur diperkirakan setara dengan 16–20 butir telur. Sistem menyediakan fitur konversi otomatis dari butir ke kilogram atau sebaliknya, sehingga memudahkan pencatatan dan perhitungan data produksi maupun penjualan.
+5.	Manajemen Penjualan Telur
+Manajemen penjualan telur merupakan proses pencatatan transaksi penjualan telur yang melibatkan jumlah, satuan, harga, dan waktu transaksi. Data penjualan yang tercatat digunakan untuk mengetahui hasil penjualan dan perkembangan usaha peternakan.
+ Dalam sistem ini, setiap transaksi penjualan telur dicatat secara detail dan tersimpan sebagai riwayat penjualan yang dapat ditampilkan kembali dalam bentuk laporan.
+6.	Penentuan Harga Telur Berdasarkan Referensi Pasar
+Harga telur ayam petelur umumnya mengikuti harga pasar yang dipublikasikan melalui media daring atau situs informasi harga komoditas. Harga tersebut dapat berbeda tergantung jenis penjualan, seperti harga kandang, harga grosir, dan harga konsumen.
+ Pada sistem yang dibangun, harga telur tidak ditentukan secara subjektif, melainkan diinput berdasarkan referensi harga yang diperoleh dari sumber informasi daring. Harga ini kemudian digunakan sebagai dasar pencatatan transaksi penjualan telur.
+7.	Hak Akses Pengguna (Role-Based Access Control)
+Hak akses pengguna merupakan pembagian peran dalam sistem yang bertujuan untuk membatasi fitur yang dapat diakses oleh setiap pengguna.
+ Pada sistem ini terdapat dua jenis pengguna, yaitu pekerja kandang dan pemilik peternakan. Pekerja kandang hanya memiliki akses untuk mencatat produksi telur, sedangkan pemilik peternakan memiliki akses untuk mengelola data penjualan, harga telur, serta melihat laporan produksi dan penjualan.
+8.	Pelaporan dan Rekapitulasi Data Produksi dan Penjualan
+Pelaporan merupakan proses penyajian data dalam bentuk informasi yang mudah dipahami, seperti tabel dan grafik. Laporan digunakan untuk mengetahui perkembangan produksi dan penjualan dalam periode tertentu.
+ Dalam tugas akhir ini, sistem menghasilkan laporan produksi dan penjualan telur berdasarkan data yang telah dicatat, sehingga pemilik peternakan dapat melakukan evaluasi usaha secara berkala.
+9.	Basis Data Relasional
+Basis data relasional digunakan untuk menyimpan data secara terstruktur dalam bentuk tabel-tabel yang saling berelasi. Basis data ini meminimalkan duplikasi data dan mempermudah pengelolaan informasi.
+ Pada sistem yang dirancang, basis data relasional digunakan untuk mengelola data kandang, ayam, produksi telur, penjualan telur, harga, dan pengguna sistem.
+10.	Aplikasi Berbasis Web
+Aplikasi berbasis web adalah aplikasi yang dapat diakses melalui browser tanpa memerlukan instalasi tambahan. Aplikasi web memudahkan pengguna dalam mengakses sistem dari berbagai perangkat.
+ Sistem informasi dalam tugas akhir ini dikembangkan berbasis web agar dapat digunakan secara fleksibel oleh pemilik peternakan dan pekerja kandang.
+Karya Tulis/Karya Nyata Terdahulu	:	Penelitian terdahulu menunjukkan bahwa penerapan sistem informasi berbasis web pada bidang peternakan ayam petelur mampu meningkatkan efektivitas pencatatan dan pengelolaan data produksi maupun penjualan telur. Febryana, Brata, dan Widodo (2020) mengembangkan sistem informasi manajemen produksi telur berbasis web pada PT. Vega Nusa Argita. Sistem tersebut difokuskan pada pencatatan produksi telur harian dan penyajian laporan produksi secara digital. Hasil penelitian menunjukkan bahwa penggunaan sistem informasi mampu menggantikan pencatatan manual sehingga data produksi menjadi lebih terstruktur dan mudah diakses.
+Penelitian lain dilakukan oleh Nelfira et al. (2024) yang merancang sistem informasi pengolahan data peternakan ayam petelur berbasis web. Sistem ini digunakan untuk mengelola data produksi telur dan menghasilkan laporan sebagai bahan evaluasi usaha peternakan. Hasil penelitian menunjukkan bahwa sistem informasi berbasis web dapat meningkatkan efisiensi pengolahan data serta mempermudah proses monitoring produksi secara berkala.
+Helinda et al. (2023) membahas sistem informasi manajemen peternakan ayam berbasis web yang bertujuan untuk mengelola data operasional peternakan secara terpusat. Sistem yang dikembangkan mampu menghasilkan informasi yang lebih akurat dan mendukung pengambilan keputusan pengelola peternakan. Penelitian ini menekankan pentingnya integrasi data dalam pengelolaan usaha peternakan.
+Selain aspek produksi, beberapa penelitian juga menyoroti pengelolaan penjualan telur. Lokardo, Adithama, dan Rusdianto (2023) mengembangkan sistem informasi toko telur berbasis web yang digunakan untuk mencatat transaksi penjualan, pengelolaan data produk, serta pembuatan laporan penjualan. Penelitian ini menunjukkan bahwa sistem informasi penjualan dapat membantu pelaku usaha dalam mengelola transaksi secara lebih sistematis.
+Djuhu et al. (2021) merancang web portal pemasaran telur ayam berbasis web yang bertujuan untuk membantu peternak dalam memasarkan telur secara daring. Sistem tersebut mempermudah proses transaksi dan pencatatan penjualan, sehingga memperluas jangkauan pemasaran hasil peternakan.
+Selanjutnya, Karyanto (2023) mengembangkan sistem informasi penjualan telur pada peternakan ayam berbasis web yang digunakan untuk mencatat transaksi penjualan secara terkomputerisasi. Sistem ini mampu menghasilkan laporan penjualan yang rapi dan meminimalkan kesalahan pencatatan.
+Berdasarkan beberapa penelitian terdahulu tersebut, dapat disimpulkan bahwa sebagian besar sistem yang dikembangkan masih berfokus pada pencatatan produksi atau penjualan secara terpisah. Oleh karena itu, tugas akhir ini berupaya mengintegrasikan pencatatan produksi telur multi kandang, manajemen harga, serta penjualan telur dalam satu sistem informasi berbasis web yang terpadu.
+Metode Penelitian/Perancangan	:	Metode yang digunakan dalam tugas akhir ini adalah metode Waterfall, yaitu metode pengembangan sistem yang dilakukan secara bertahap dan berurutan mulai dari analisis kebutuhan, perancangan, implementasi, hingga pengujian sistem. Metode Waterfall dipilih karena kebutuhan sistem informasi manajemen dan monitoring produksi serta penjualan telur ayam petelur telah dapat didefinisikan dengan jelas sejak awal berdasarkan hasil observasi di Hans Jaya Poultry Farm, serta ruang lingkup penelitian yang terbatas pada satu studi kasus, sehingga metode ini sesuai untuk mendukung proses perancangan dan pengembangan sistem secara sistematis dan terstruktur.
+Tempat Penelitian		Penelitian ini dilaksanakan di Hans Jaya Poultry Farm yang berlokasi di Kecamatan Babadan, Kabupaten Ponorogo, Jawa Timur. Pemilihan lokasi penelitian ini didasarkan pada kesesuaian objek penelitian dengan topik tugas akhir, yaitu usaha peternakan ayam petelur yang melakukan kegiatan produksi dan penjualan telur secara langsung, sehingga dapat memberikan data dan gambaran nyata untuk mendukung proses perancangan dan pengujian sistem informasi yang dibangun.
+Deskripsi/Gambaran TA	:	Sistem informasi yang dibangun pada tugas akhir ini merupakan aplikasi web yang terdiri dari beberapa modul utama yang saling terintegrasi untuk mendukung proses pencatatan, pengelolaan, dan pelaporan produksi serta penjualan telur ayam petelur pada Hans Jaya Poultry Farm.
+1. Modul Manajemen Pengguna
+Modul ini digunakan untuk mengelola pengguna sistem berdasarkan peran dan hak akses.
+Fitur utama:
+•	Login dan autentikasi pengguna
+•	Pembagian hak akses berdasarkan peran pengguna
+•	Pengelolaan data pengguna
+Peran pengguna:
+•	Pekerja kandang: hanya dapat menginput data produksi telur
+•	Pemilik peternakan: mengelola seluruh data dan melihat laporan
+Tabel terkait:
+•	users
+ Digunakan untuk menyimpan data akun pengguna, termasuk peran (role) pengguna yang menentukan akses terhadap fitur sistem.
+2. Modul Manajemen Kandang
+Modul ini berfungsi untuk mengelola data kandang sebagai unit utama produksi.
+Fitur utama:
+•	Menambah dan mengubah data kandang
+•	Menentukan jumlah ayam pada setiap kandang
+•	Menampilkan daftar kandang aktif
+Fungsi modul:
+
+Modul ini menjadi dasar pengelompokan data produksi telur karena setiap pencatatan produksi selalu dikaitkan dengan kandang tertentu.
+Tabel terkait:
+•	kandang
+ Menyimpan informasi kandang seperti nama kandang, jumlah ayam, dan keterangan tambahan.
+3. Modul Pencatatan Produksi Telur
+Modul ini digunakan oleh pekerja kandang untuk mencatat hasil produksi telur harian.
+Fitur utama:
+•	Input produksi telur per kandang
+•	Pilihan satuan input (butir atau kilogram)
+•	Konversi otomatis antara satuan butir dan kilogram
+•	Riwayat produksi telur per kandang
+Fungsi modul:
+Modul ini memastikan data produksi tercatat secara konsisten dan dapat dibandingkan antar kandang dan periode waktu tertentu.
+Tabel terkait:
+•	produksi_telur
+ Menyimpan data produksi telur harian, termasuk tanggal produksi, satuan input, hasil konversi, dan relasi ke kandang serta pengguna yang melakukan input.
+4. Modul Manajemen Harga Telur
+Modul ini digunakan untuk menyimpan dan mengelola harga telur berdasarkan jenis penjualan dan tanggal berlaku.
+Fitur utama:
+•	Input harga telur harian berdasarkan harga pasar
+•	Pengelompokan harga (harga kandang, grosir, konsumen)
+•	Riwayat perubahan harga
+Fungsi modul:
+
+Harga disimpan secara historis sehingga perubahan harga tidak memengaruhi data transaksi penjualan yang telah terjadi sebelumnya.
+Tabel terkait:
+•	harga_telur
+ Menyimpan data harga telur berdasarkan jenis harga dan tanggal berlaku.
+
+5. Modul Penjualan Telur
+Modul ini digunakan oleh pemilik peternakan untuk mencatat transaksi penjualan telur.
+Fitur utama:
+•	Input transaksi penjualan telur
+•	Pemilihan jenis harga
+•	Input jumlah telur (butir atau kilogram)
+•	Perhitungan otomatis total penjualan
+•	Riwayat transaksi penjualan
+Fungsi modul:
+
+Modul ini menghubungkan data produksi dengan aktivitas penjualan sehingga pemilik peternakan dapat memantau hasil penjualan secara sistematis.
+Tabel terkait:
+•	penjualan
+ Menyimpan data transaksi penjualan utama
+•	detail_penjualan
+ Menyimpan rincian jumlah dan satuan telur yang dijual dalam setiap transaksi
+6. Modul Laporan dan Monitoring
+Modul ini digunakan untuk menyajikan informasi produksi dan penjualan dalam bentuk ringkasan data.
+Fitur utama:
+•	Rekap produksi telur per kandang
+•	Rekap penjualan telur per periode
+•	Grafik produksi dan penjualan
+•	Filter data berdasarkan tanggal dan kandang
+Fungsi modul:
+
+Modul ini membantu pemilik peternakan dalam memantau kinerja produksi dan penjualan secara periodik serta sebagai bahan evaluasi usaha.
+Tabel terkait:
+•	produksi_telur
+•	penjualan
+•	detail_penjualan
+•	kandang
+•	harga_telur

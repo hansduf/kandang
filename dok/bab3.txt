@@ -1,0 +1,74 @@
+BAB 3 — Model Eloquent & Relasi
+Setiap tabel memiliki Model. Model mendefinisikan relasi antar tabel menggunakan Eloquent ORM.
+3.1  Buat Semua Model
+php artisan make:model Kandang
+php artisan make:model ProduksiTelur
+php artisan make:model HargaTelur
+php artisan make:model Penjualan
+php artisan make:model DetailPenjualan
+php artisan make:model StokTelur
+php artisan make:model Pengaturan
+3.2  Model User (update existing)
+// app/Models/User.php
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable {
+    use HasRoles;
+
+    protected $fillable = ['name', 'username', 'password', 'role', 'kandang_id'];
+
+    public function kandang() {
+        return $this->belongsTo(Kandang::class);
+    }
+    public function produksiTelur() {
+        return $this->hasMany(ProduksiTelur::class);
+    }
+    public function penjualan() {
+        return $this->hasMany(Penjualan::class);
+    }
+}
+3.3  Model Kandang
+// app/Models/Kandang.php
+class Kandang extends Model {
+    protected $table = 'kandang';
+    protected $fillable = ['nama_kandang', 'jumlah_ayam', 'keterangan', 'status'];
+
+    public function produksiTelur() {
+        return $this->hasMany(ProduksiTelur::class);
+    }
+    public function pekerja() {
+        return $this->hasMany(User::class);
+    }
+}
+3.4  Model ProduksiTelur
+// app/Models/ProduksiTelur.php
+class ProduksiTelur extends Model {
+    protected $table = 'produksi_telur';
+    protected $fillable = [
+        'kandang_id', 'user_id', 'tanggal_produksi',
+        'satuan_input', 'jumlah_input', 'jumlah_butir', 'jumlah_kg', 'keterangan'
+    ];
+
+    public function kandang() { return $this->belongsTo(Kandang::class); }
+    public function user()    { return $this->belongsTo(User::class); }
+}
+3.5  Model Penjualan & DetailPenjualan
+// app/Models/Penjualan.php
+class Penjualan extends Model {
+    protected $fillable = ['user_id','tanggal_jual','nama_pembeli','total_harga','keterangan'];
+
+    public function user()   { return $this->belongsTo(User::class); }
+    public function detail() { return $this->hasMany(DetailPenjualan::class); }
+}
+
+// app/Models/DetailPenjualan.php
+class DetailPenjualan extends Model {
+    protected $table = 'detail_penjualan';
+    protected $fillable = [
+        'penjualan_id', 'harga_telur_id', 'satuan_jual',
+        'jumlah_jual', 'jumlah_butir', 'jumlah_kg', 'harga_satuan', 'subtotal'
+    ];
+
+    public function penjualan()  { return $this->belongsTo(Penjualan::class); }
+    public function hargaTelur() { return $this->belongsTo(HargaTelur::class); }
+}

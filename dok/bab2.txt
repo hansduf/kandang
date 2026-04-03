@@ -1,0 +1,95 @@
+BAB 2 — Migration Database (8 Tabel)
+Buat semua file migration secara berurutan. Urutan penting karena ada relasi foreign key.
+2.1  Buat File Migration
+php artisan make:migration create_kandang_table
+php artisan make:migration add_kandang_id_to_users_table
+php artisan make:migration create_produksi_telur_table
+php artisan make:migration create_harga_telur_table
+php artisan make:migration create_penjualan_table
+php artisan make:migration create_detail_penjualan_table
+php artisan make:migration create_stok_telur_table
+php artisan make:migration create_pengaturan_table
+2.2  Migration: kandang
+Schema::create('kandang', function (Blueprint $table) {
+    $table->id();
+    $table->string('nama_kandang', 100);
+    $table->unsignedInteger('jumlah_ayam')->default(0);
+    $table->text('keterangan')->nullable();
+    $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
+    $table->timestamps();
+});
+2.3  Migration: tambah kandang_id ke users
+Schema::table('users', function (Blueprint $table) {
+    $table->enum('role', ['pemilik', 'pekerja'])->after('password');
+    $table->foreignId('kandang_id')
+          ->nullable()
+          ->after('role')
+          ->constrained('kandang')
+          ->nullOnDelete();
+});
+2.4  Migration: produksi_telur
+Schema::create('produksi_telur', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('kandang_id')->constrained('kandang')->cascadeOnDelete();
+    $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+    $table->date('tanggal_produksi');
+    $table->enum('satuan_input', ['butir', 'kg']);
+    $table->decimal('jumlah_input', 10, 2);
+    $table->unsignedInteger('jumlah_butir')->default(0);
+    $table->decimal('jumlah_kg', 10, 3)->default(0);
+    $table->text('keterangan')->nullable();
+    $table->timestamps();
+});
+2.5  Migration: harga_telur
+Schema::create('harga_telur', function (Blueprint $table) {
+    $table->id();
+    $table->enum('jenis_harga', ['kandang', 'grosir', 'konsumen']);
+    $table->decimal('harga_per_kg', 12, 2);
+    $table->decimal('harga_per_butir', 12, 2)->nullable();
+    $table->date('tanggal_berlaku');
+    $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+    $table->text('keterangan')->nullable();
+    $table->timestamp('created_at')->useCurrent();
+});
+2.6  Migration: penjualan
+Schema::create('penjualan', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+    $table->date('tanggal_jual');
+    $table->string('nama_pembeli', 100)->nullable();
+    $table->decimal('total_harga', 15, 2)->default(0);
+    $table->text('keterangan')->nullable();
+    $table->timestamps();
+});
+2.7  Migration: detail_penjualan
+Schema::create('detail_penjualan', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('penjualan_id')->constrained('penjualan')->cascadeOnDelete();
+    $table->foreignId('harga_telur_id')->constrained('harga_telur');
+    $table->enum('satuan_jual', ['butir', 'kg']);
+    $table->decimal('jumlah_jual', 10, 2);
+    $table->unsignedInteger('jumlah_butir')->default(0);
+    $table->decimal('jumlah_kg', 10, 3)->default(0);
+    $table->decimal('harga_satuan', 12, 2);
+    $table->decimal('subtotal', 15, 2)->default(0);
+    $table->timestamp('created_at')->useCurrent();
+});
+2.8  Migration: stok_telur
+Schema::create('stok_telur', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedInteger('stok_butir')->default(0);
+    $table->decimal('stok_kg', 10, 3)->default(0);
+    $table->timestamp('updated_at')->useCurrent();
+});
+2.9  Migration: pengaturan
+Schema::create('pengaturan', function (Blueprint $table) {
+    $table->id();
+    $table->string('kunci', 100)->unique();
+    $table->string('nilai', 255);
+    $table->enum('tipe_data', ['string', 'integer', 'decimal', 'boolean'])
+          ->default('string');
+    $table->text('keterangan')->nullable();
+    $table->timestamp('updated_at')->useCurrent();
+});
+2.10  Jalankan Migration
+php artisan migrate

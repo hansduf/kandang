@@ -1,0 +1,83 @@
+BAB 8 — Export Laporan PDF & Excel
+8.1  Export PDF dengan DomPDF
+// app/Http/Controllers/LaporanController.php
+
+use Barryvdh\DomPDF\Facade\Pdf;
+
+public function exportPdf(Request $request) {
+    $data = ProduksiTelur::with('kandang', 'user')
+        ->whereMonth('tanggal_produksi', $request->bulan)
+        ->whereYear('tanggal_produksi', $request->tahun)
+        ->orderBy('tanggal_produksi')
+        ->get();
+
+    $pdf = Pdf::loadView('laporan.pdf.produksi', compact('data'))
+              ->setPaper('a4', 'landscape');
+
+    return $pdf->download('laporan-produksi.pdf');
+}
+8.2  View PDF (laporan/pdf/produksi.blade.php)
+<!DOCTYPE html><html><head>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        h2   { color: #1F4E79; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #2E75B6; color: white; padding: 8px; }
+        td { border: 1px solid #ccc; padding: 6px; }
+        tr:nth-child(even) { background: #f0f7ff; }
+    </style>
+</head><body>
+    <h2>Laporan Produksi Telur — Hans Jaya Poultry Farm</h2>
+    <table>
+        <tr>
+            <th>No</th><th>Tanggal</th><th>Kandang</th>
+            <th>Satuan</th><th>Jumlah (Butir)</th><th>Jumlah (Kg)</th>
+        </tr>
+        @foreach($data as $i => $d)
+        <tr>
+            <td>{{ $i+1 }}</td>
+            <td>{{ $d->tanggal_produksi }}</td>
+            <td>{{ $d->kandang->nama_kandang }}</td>
+            <td>{{ $d->satuan_input }}</td>
+            <td>{{ number_format($d->jumlah_butir) }}</td>
+            <td>{{ number_format($d->jumlah_kg, 3) }}</td>
+        </tr>
+        @endforeach
+    </table>
+</body></html>
+8.3  Export Excel dengan Maatwebsite
+php artisan make:export ProduksiExport --model=ProduksiTelur
+// app/Exports/ProduksiExport.php
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+
+class ProduksiExport implements FromCollection, WithHeadings {
+
+    public function __construct(private $bulan, private $tahun) {}
+
+    public function collection() {
+        return ProduksiTelur::with('kandang')
+            ->whereMonth('tanggal_produksi', $this->bulan)
+            ->whereYear('tanggal_produksi', $this->tahun)
+            ->get()->map(fn($d) => [
+                'Tanggal'  => $d->tanggal_produksi,
+                'Kandang'  => $d->kandang->nama_kandang,
+                'Satuan'   => $d->satuan_input,
+                'Butir'    => $d->jumlah_butir,
+                'Kg'       => $d->jumlah_kg,
+            ]);
+    }
+
+    public function headings(): array {
+        return ['Tanggal', 'Kandang', 'Satuan', 'Jumlah (Butir)', 'Jumlah (Kg)'];
+    }
+}
+// Di Controller
+use Maatwebsite\Excel\Facades\Excel;
+
+public function exportExcel(Request $request) {
+    return Excel::download(
+        new ProduksiExport($request->bulan, $request->tahun),
+        'laporan-produksi.xlsx'
+    );
+}

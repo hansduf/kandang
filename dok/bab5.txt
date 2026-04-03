@@ -1,0 +1,106 @@
+BAB 5 — Controller & Logika CRUD
+5.1  Buat Semua Controller
+php artisan make:controller DashboardController
+php artisan make:controller KandangController --resource
+php artisan make:controller ProduksiTelurController --resource
+php artisan make:controller HargaTelurController --resource
+php artisan make:controller PenjualanController --resource
+php artisan make:controller LaporanController
+php artisan make:controller PengaturanController --resource
+5.2  Logika Konversi Otomatis (ProduksiTelurController)
+Konversi butir ↔ kg mengambil nilai dari tabel pengaturan, bukan hardcode.
+// app/Http/Controllers/ProduksiTelurController.php
+
+public function store(Request $request) {
+    $request->validate([
+        'tanggal_produksi' => 'required|date',
+        'satuan_input'     => 'required|in:butir,kg',
+        'jumlah_input'     => 'required|numeric|min:0',
+    ]);
+
+    // Ambil nilai konversi dari tabel pengaturan
+    $konversi = Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai');
+    $konversi = (float) $konversi ?: 16;
+
+    if ($request->satuan_input === 'butir') {
+        $jumlah_butir = (int) $request->jumlah_input;
+        $jumlah_kg    = round($jumlah_butir / $konversi, 3);
+    } else {
+        $jumlah_kg    = (float) $request->jumlah_input;
+        $jumlah_butir = (int) round($jumlah_kg * $konversi);
+    }
+
+    ProduksiTelur::create([
+        'kandang_id'       => auth()->user()->kandang_id,
+        'user_id'          => auth()->id(),
+        'tanggal_produksi' => $request->tanggal_produksi,
+        'satuan_input'     => $request->satuan_input,
+        'jumlah_input'     => $request->jumlah_input,
+        'jumlah_butir'     => $jumlah_butir,
+        'jumlah_kg'        => $jumlah_kg,
+        'keterangan'       => $request->keterangan,
+    ]);
+
+    // Update stok otomatis
+    $stok = StokTelur::first();
+    $stok->increment('stok_butir', $jumlah_butir);
+    $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
+    $stok->save();
+
+    return redirect()->route('produksi.index')
+                     ->with('success', 'Data produksi berhasil disimpan!');
+}
+5.3  Logika Penjualan (Update Stok Otomatis)
+// app/Http/Controllers/PenjualanController.php
+
+public function store(Request $request) {
+    DB::transaction(function () use ($request) {
+        $penjualan = Penjualan::create([
+            'user_id'      => auth()->id(),
+            'tanggal_jual' => $request->tanggal_jual,
+            'nama_pembeli' => $request->nama_pembeli,
+            'total_harga'  => 0,
+        ]);
+
+        $total = 0;
+        $totalButir = 0;
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+
+        foreach ($request->items as $item) {
+            $harga   = HargaTelur::findOrFail($item['harga_telur_id']);
+            $hargaSatuan = $item['satuan_jual'] === 'kg'
+                ? $harga->harga_per_kg
+                : $harga->harga_per_butir;
+
+            $jumlahButir = $item['satuan_jual'] === 'butir'
+                ? (int) $item['jumlah_jual']
+                : (int) round($item['jumlah_jual'] * $konversi);
+
+            $subtotal = $item['jumlah_jual'] * $hargaSatuan;
+            $total   += $subtotal;
+            $totalButir += $jumlahButir;
+
+            DetailPenjualan::create([
+                'penjualan_id'   => $penjualan->id,
+                'harga_telur_id' => $item['harga_telur_id'],
+                'satuan_jual'    => $item['satuan_jual'],
+                'jumlah_jual'    => $item['jumlah_jual'],
+                'jumlah_butir'   => $jumlahButir,
+                'jumlah_kg'      => round($jumlahButir / $konversi, 3),
+                'harga_satuan'   => $hargaSatuan,
+                'subtotal'       => $subtotal,
+            ]);
+        }
+
+        $penjualan->update(['total_harga' => $total]);
+
+        // Kurangi stok
+        $stok = StokTelur::first();
+        $stok->decrement('stok_butir', $totalButir);
+        $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
+        $stok->save();
+    });
+
+    return redirect()->route('penjualan.index')
+                     ->with('success', 'Transaksi penjualan berhasil disimpan!');
+}

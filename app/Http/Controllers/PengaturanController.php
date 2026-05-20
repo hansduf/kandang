@@ -20,15 +20,32 @@ class PengaturanController extends Controller
 
     public function update(Request $request, Pengaturan $pengaturan)
     {
-        $request->validate([
-            'nilai' => 'required|string',
-        ]);
+        // Validate based on tipe_data
+        $rules = ['nilai' => 'required'];
+        
+        if ($pengaturan->tipe_data === 'integer') {
+            $rules['nilai'] = 'required|integer|min:1';
+        } elseif ($pengaturan->tipe_data === 'float') {
+            $rules['nilai'] = 'required|numeric|min:0.01';
+        } elseif ($pengaturan->tipe_data === 'boolean') {
+            $rules['nilai'] = 'required|in:0,1';
+        } else {
+            $rules['nilai'] = 'required|string|max:255';
+        }
+        
+        $validated = $request->validate($rules);
 
-        $pengaturan->update([
-            'nilai' => $request->nilai,
-        ]);
+        try {
+            $pengaturan->update([
+                'nilai' => $validated['nilai'],
+            ]);
 
-        return redirect()->route('pengaturan.index')
-                         ->with('success', 'Pengaturan berhasil diperbarui!');
+            return redirect()->route('pengaturan.index')
+                             ->with('success', 'Pengaturan " ' . ucwords(str_replace('_', ' ', $pengaturan->kunci)) . ' " berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                             ->with('error', 'Gagal memperbarui pengaturan: ' . $e->getMessage())
+                             ->withInput();
+        }
     }
 }

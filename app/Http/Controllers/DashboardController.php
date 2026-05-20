@@ -49,54 +49,48 @@ class DashboardController extends Controller
             $endDate = now()->endOfDay();
         }
 
-        // Produksi hari ini (tetap fixed untuk hari ini)
-        $produksiHariIni = ProduksiTelur::whereDate('tanggal_produksi', today())
-            ->sum('jumlah_butir');
-
-        // Produksi periode yang dipilih
-        $produksiPeriode = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->sum('jumlah_butir');
-
+        // Optimize: Single query for today's metrics
+        $todayMetrics = ProduksiTelur::whereDate('tanggal_produksi', today())
+            ->selectRaw('SUM(jumlah_butir) as produksi, AVG(hdp) as avgHDP, AVG(hhp) as avgHHP, AVG(mortality) as avgMortality')
+            ->first();
+        
+        // Optimize: Single query for period metrics
+        $periodMetrics = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->selectRaw('SUM(jumlah_butir) as produksi, SUM(ayam_mati) as kematian, AVG(hdp) as avgHDP, AVG(hhp) as avgHHP, AVG(mortality) as avgMortality')
+            ->first();
+        
+        // Optimize: Single query for kandang & death stats
+        $kandangStats = Kandang::where('status', 'aktif')
+            ->selectRaw('COUNT(*) as jumlah_kandang, SUM(jumlah_ayam) as total_kapasitas')
+            ->first();
+        
+        $totalKematianAllTime = ProduksiTelur::sum('ayam_mati');
+        $totalKematianSebelumPeriode = ProduksiTelur::where('tanggal_produksi', '<', $startDate)->sum('ayam_mati');
+        
+        // Set values from aggregated queries
+        $produksiHariIni = $todayMetrics->produksi ?? 0;
+        $produksiPeriode = $periodMetrics->produksi ?? 0;
+        $totalKematianPeriode = $periodMetrics->kematian ?? 0;
+        
+        $jumlahKandang = $kandangStats->jumlah_kandang ?? 0;
+        $totalKapasitas = $kandangStats->total_kapasitas ?? 0;
+        
         // Penjualan periode yang dipilih
         $penjualanPeriode = Penjualan::whereBetween('tanggal_jual', [$startDate, $endDate])
             ->sum('total_harga');
-
-        // Jumlah kandang aktif
-        $jumlahKandang = Kandang::where('status', 'aktif')->count();
-
-        // Total ayam sekarang (kapasitas - total kematian all time)
-        $totalKematianAllTime = ProduksiTelur::sum('ayam_mati');
-        $totalKapasitas = Kandang::where('status', 'aktif')->sum('jumlah_ayam');
+        
         $totalAyamSekarang = $totalKapasitas - $totalKematianAllTime;
-
-        // Total ayam awal periode (kapasitas - kematian sebelum periode)
-        $totalKematianSebelumPeriode = ProduksiTelur::where('tanggal_produksi', '<', $startDate)
-            ->sum('ayam_mati');
         $totalAyamAwal = $totalKapasitas - $totalKematianSebelumPeriode;
-
-        // Total kematian dalam periode
-        $totalKematianPeriode = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->sum('ayam_mati');
-
-        // Metrics hari ini (rata-rata dari semua kandang)
-        $avgHDPToday = ProduksiTelur::whereDate('tanggal_produksi', today())
-            ->avg('hdp') ?? 0;
-
-        $avgHHPToday = ProduksiTelur::whereDate('tanggal_produksi', today())
-            ->avg('hhp') ?? 0;
-
-        $avgMortalityToday = ProduksiTelur::whereDate('tanggal_produksi', today())
-            ->avg('mortality') ?? 0;
-
-        // Metrics periode (rata-rata dari semua kandang)
-        $avgHDPPeriode = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->avg('hdp') ?? 0;
-
-        $avgHHPPeriode = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->avg('hhp') ?? 0;
-
-        $avgMortalityPeriode = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->avg('mortality') ?? 0;
+        
+        // Metrics hari ini
+        $avgHDPToday = $todayMetrics->avgHDP ?? 0;
+        $avgHHPToday = $todayMetrics->avgHHP ?? 0;
+        $avgMortalityToday = $todayMetrics->avgMortality ?? 0;
+        
+        // Metrics periode
+        $avgHDPPeriode = $periodMetrics->avgHDP ?? 0;
+        $avgHHPPeriode = $periodMetrics->avgHHP ?? 0;
+        $avgMortalityPeriode = $periodMetrics->avgMortality ?? 0;
 
         // Grafik periode per kandang
         $produksiPeriodePerKandang = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
@@ -173,41 +167,39 @@ class DashboardController extends Controller
             'status' => $kandang->status,
         ];
 
-        // Produksi hari ini untuk kandang ini
-        $produksiHariIni = ProduksiTelur::where('kandang_id', $kandang->id)
+        // Optimize: Single query for today's metrics
+        $todayData = ProduksiTelur::where('kandang_id', $kandang->id)
             ->whereDate('tanggal_produksi', today())
-            ->sum('jumlah_butir');
-
-        // HDP hari ini (dari produksi hari ini)
-        $hdpHariIni = ProduksiTelur::where('kandang_id', $kandang->id)
-            ->whereDate('tanggal_produksi', today())
-            ->avg('hdp') ?? 0;
-
-        // Rata-rata HDP periode yang dipilih
-        $avgHDPPeriode = ProduksiTelur::where('kandang_id', $kandang->id)
+            ->selectRaw('SUM(jumlah_butir) as produksi, AVG(hdp) as avgHDP, SUM(ayam_mati) as kematian')
+            ->first();
+        
+        // Optimize: Single query for period metrics
+        $periodData = ProduksiTelur::where('kandang_id', $kandang->id)
             ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->avg('hdp') ?? 0;
-
-        // Rata-rata produksi periode yang dipilih
-        $avgProduksiPeriode = ProduksiTelur::where('kandang_id', $kandang->id)
-            ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->avg('jumlah_butir');
-
-        // Total ayam mati untuk periode
-        $totalAyamMatiPeriode = ProduksiTelur::where('kandang_id', $kandang->id)
-            ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->sum('ayam_mati');
+            ->selectRaw('AVG(jumlah_butir) as avgProduksi, AVG(hdp) as avgHDP, SUM(ayam_mati) as kematian, SUM(jumlah_butir) as totalProduksi')
+            ->first();
+        
+        // Set values from aggregated queries
+        $produksiHariIni = $todayData->produksi ?? 0;
+        $hdpHariIni = $todayData->avgHDP ?? 0;
+        $avgHDPPeriode = $periodData->avgHDP ?? 0;
+        $avgProduksiPeriode = $periodData->avgProduksi ?? 0;
+        $totalAyamMatiPeriode = $periodData->kematian ?? 0;
 
         // Data grafik dengan metrics sesuai periode
         $perforamaPeriode = ProduksiTelur::where('kandang_id', $kandang->id)
             ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->selectRaw('DATE(tanggal_produksi) as tgl, jumlah_butir as produksi, ayam_mati, hdp, hhp, mortality, catatan')
+            ->selectRaw('DATE(tanggal_produksi) as tgl, SUM(jumlah_butir) as produksi, SUM(ayam_mati) as ayam_mati, AVG(hdp) as hdp, AVG(hhp) as hhp, AVG(mortality) as mortality')
+            ->groupByRaw("DATE(tanggal_produksi)")
             ->orderBy('tgl')
             ->get();
 
+        // Untuk tabel, reverse agar data terbaru di atas
+        $perforamaPeriodeTable = $perforamaPeriode->reverse()->values();
+
         return view('dashboard.pekerja', compact(
             'kandang', 'dataKandang', 'produksiHariIni', 'totalAyamMatiPeriode', 
-            'avgProduksiPeriode', 'perforamaPeriode', 'hdpHariIni', 'avgHDPPeriode',
+            'avgProduksiPeriode', 'perforamaPeriode', 'perforamaPeriodeTable', 'hdpHariIni', 'avgHDPPeriode',
             'periode', 'bulan', 'tahun'
         ));
     }

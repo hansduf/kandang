@@ -41,8 +41,27 @@
 
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p class="text-sm text-blue-800">
-                    ℹ️ Kosongkan password jika tidak ingin mengubah kata sandi
+                    <i class="fas fa-circle-info text-blue-500"></i> Kosongkan password jika tidak ingin mengubah kata sandi
                 </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Kata Sandi Baru (Opsional)</label>
+                    <input type="password" name="password" id="password" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Biarkan kosong jika tidak ingin ubah">
+                    @error('password')
+                        <span class="text-red-600 text-sm mt-1">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Kata Sandi</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ulangi kata sandi baru">
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-6">

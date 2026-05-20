@@ -45,7 +45,7 @@
                 </div>
                 <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
                     <p class="text-sm text-gray-600 font-medium">Status</p>
-                    <p class="text-lg font-bold text-purple-700 mt-1" id="stok-status">✅ Cukup</p>
+                    <p class="text-lg font-bold text-purple-700 mt-1" id="stok-status"><i class="fas fa-check-circle text-green-600"></i> Cukup</p>
                 </div>
             </div>
 
@@ -199,7 +199,7 @@
                         onchange="updateSubtotal(${itemCount})" min="0" placeholder="Jumlah (Butir)" required>
                 </td>
                 <td class="px-4 py-3">
-                    <input type="number" name="items[${itemCount}][jumlah_butir]" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm jumlah-konversi-input" 
+                    <input type="number" name="items[${itemCount}][jumlah_butir]" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm jumlah-konversi-input" 
                         onchange="updateSubtotal(${itemCount})" min="0" placeholder="Perkiraan" required>
                     <small class="text-gray-500 text-xs butir-helper" style="display:none;">KG dari butir</small>
                     <small class="text-gray-500 text-xs kg-helper">Butir dari KG</small>
@@ -237,7 +237,7 @@
                 // Update input field
                 konversiInput.name = `items[${itemNo}][jumlah_butir]`;
                 konversiInput.placeholder = 'Perkiraan butir';
-                konversiInput.step = '1';
+                konversiInput.step = 'any';
                 konversiInput.disabled = false;
                 
                 // Update helper
@@ -254,7 +254,7 @@
                 // Update input field
                 konversiInput.name = `items[${itemNo}][jumlah_kg]`;
                 konversiInput.placeholder = 'Perkiraan KG';
-                konversiInput.step = '0.001';
+                konversiInput.step = 'any';
                 konversiInput.disabled = false;
                 
                 // Update helper
@@ -278,7 +278,7 @@
             const hargaPerKg = hargaList[hargaSelect.value] || 0;
             const satuan = satuanSelect.value;
             const jumlah = parseFloat(jmlInput.value) || 0;
-            const konversi = 16; // Default dari pengaturan
+            const konversi = {{ $konversi ?? 16 }}; // Dynamic dari pengaturan
             
             let subtotal = 0;
             let hargaSatuan = 0;
@@ -345,10 +345,10 @@
                         // Update status
                         const statusEl = document.getElementById('stok-status');
                         if (stokButir > 0) {
-                            statusEl.textContent = '✅ Cukup';
+                            statusEl.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Cukup';
                             statusEl.className = 'text-lg font-bold text-green-700 mt-1';
                         } else {
-                            statusEl.textContent = '❌ Kosong';
+                            statusEl.innerHTML = '<i class="fas fa-circle-xmark text-red-600"></i> Kosong';
                             statusEl.className = 'text-lg font-bold text-red-700 mt-1';
                         }
                     }

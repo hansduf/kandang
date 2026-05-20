@@ -1,0 +1,33 @@
+@startuml
+|Pengguna|
+start
+:Buka Aplikasi;
+|Sistem|
+:Tampilkan Halaman Login;
+|Pengguna|
+:Input Email/Username;
+:Input Password;
+:Klik Tombol Login;
+|Sistem|
+:Validasi Kredensial;
+if (Kredensial Benar?) then (Ya)
+  :Cek Role Pengguna;
+  if (Role Pemilik?) then (Ya)
+    :Tampilkan Dashboard Pemilik;
+  else (Pekerja)
+    :Tampilkan Dashboard Pekerja;
+  endif
+  |Pengguna|
+  :Akses Sistem;
+else (Tidak)
+  |Sistem|
+  :Tampilkan Pesan Error;
+  |Pengguna|
+  if (Retry Login?) then (Ya)
+    :Kembali ke Form Login;
+  else (Tidak)
+    stop
+  endif
+endif
+end
+@enduml

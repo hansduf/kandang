@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net"><diagram name="02-lihat-dashboard" id="02_lihat_dashboard"><mxGraphModel dx="1471" dy="803" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0"><root>
+  <mxCell id="0" />
+  <mxCell id="1" parent="0" />
+  <mxCell id="parent_swim" parent="1" value="Activity diagram 02 lihat dashboard" vertex="1" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=20;whiteSpace=wrap;align=left;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry height="662" width="400" x="20" y="40" as="geometry" />
+  </mxCell>
+  <mxCell id="swim_0" parent="parent_swim" value="Pengguna" vertex="1" style="swimlane;html=1;startSize=20;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666">
+    <mxGeometry x="0" y="20" width="212" height="642" as="geometry" />
+  </mxCell>
+  <mxCell id="swim_1" parent="parent_swim" value="Sistem" vertex="1" style="swimlane;html=1;startSize=20;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666">
+    <mxGeometry x="212" y="20" width="333" height="642" as="geometry" />
+  </mxCell>
+  <mxCell id="n0" parent="swim_0" value="" vertex="1" style="ellipse;html=1;shape=startState;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="68" y="26" width="30" height="30" as="geometry" />
+  </mxCell>
+  <mxCell id="n1" parent="swim_0" value="Klik Dashboard" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="85" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n2" parent="swim_1" value="Load Data Default (Bulan Ini)" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="85" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n3" parent="swim_1" value="Query Stok Telur Real-Time" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="150" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n4" parent="swim_1" value="Query Summary Penjualan" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="215" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n5" parent="swim_1" value="Query Ringkasan Produksi" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="280" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n6" parent="swim_1" value="Render Dashboard" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="345" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n7" parent="swim_0" value="Lihat Ringkasan Data" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="150" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n8" parent="swim_0" value="Pilih Filter Periode" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="215" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n9" parent="swim_0" value="Ubah Filter?" vertex="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="76" y="280" width="80" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n10" parent="swim_0" value="Pilih Periode" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="355" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n11" parent="swim_0" value="Klik Apply Filter" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="420" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n12" parent="swim_1" value="Update Data sesuai Filter" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="410" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n13" parent="swim_1" value="Render Dashboard Baru" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="475" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n14" parent="swim_0" value="Lihat Data Terupdate" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="485" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n15" parent="swim_0" value="Selesai" vertex="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=#d6b656">
+    <mxGeometry x="23" y="550" width="120" height="40" as="geometry" />
+  </mxCell>
+  <mxCell id="n16" parent="swim_0" value="" vertex="1" style="points=[[0.145,0.145,0],[0.5,0,0],[0.855,0.145,0],[1,0.5,0],[0.855,0.855,0],[0.5,1,0],[0.145,0.855,0],[0,0.5,0]];shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;aspect=fixed;outline=end;symbol=cancel">
+    <mxGeometry x="91" y="585" width="34" height="34" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_0" parent="parent_swim" source="n0" target="n1" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_1" parent="parent_swim" source="n1" target="n2" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_2" parent="parent_swim" source="n2" target="n3" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_3" parent="parent_swim" source="n3" target="n4" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_4" parent="parent_swim" source="n4" target="n5" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_5" parent="parent_swim" source="n5" target="n6" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_6" parent="parent_swim" source="n6" target="n7" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_7" parent="parent_swim" source="n7" target="n8" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_8" parent="parent_swim" source="n8" target="n9" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_9" parent="parent_swim" source="n10" target="n11" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_10" parent="parent_swim" source="n11" target="n12" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_11" parent="parent_swim" source="n12" target="n13" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_12" parent="parent_swim" source="n13" target="n14" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_13" parent="parent_swim" source="n9" target="n10" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="label_13" parent="edge_13" value="Ya" connectable="0" vertex="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_14" parent="parent_swim" source="n9" target="n15" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="label_14" parent="edge_14" value="Tidak" connectable="0" vertex="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_15" parent="parent_swim" source="n14" target="n16" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+  <mxCell id="edge_16" parent="parent_swim" source="n15" target="n16" edge="1" style="edgeStyle=none;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8">
+    <mxGeometry relative="1" as="geometry" />
+  </mxCell>
+</root></mxGraphModel></diagram></mxfile>

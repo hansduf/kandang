@@ -12,11 +12,11 @@ class HargaTelurController extends Controller
         // Auto-update status harga lama
         $this->updateHargaStatus();
         
-        // Get harga aktif dan riwayat
+        // OPTIMIZED: Use pagination instead of loading all aktif harga
         $hargaAktif = HargaTelur::where('status', 'aktif')
                                 ->orderBy('tanggal_berlaku', 'desc')
                                 ->orderBy('created_at', 'desc')
-                                ->get();
+                                ->paginate(20);
         $hargaHangus = HargaTelur::where('status', 'hangus')
                                 ->orderBy('tanggal_berlaku', 'desc')
                                 ->paginate(10);
@@ -24,8 +24,12 @@ class HargaTelurController extends Controller
         // Get month filter dari request
         $selectedMonth = $request->query('bulan', null);
         
-        // Prepare data untuk grafik - include SEMUA harga (aktif dan hangus)
-        $hargaHistory = HargaTelur::orderBy('tanggal_berlaku')->orderBy('created_at')->get()->groupBy('jenis_harga');
+        // OPTIMIZED: Limit to 1 year of history to reduce data load
+        $hargaHistory = HargaTelur::where('tanggal_berlaku', '>=', now()->subYear())
+            ->orderBy('tanggal_berlaku')
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('jenis_harga');
         $chartData = $this->prepareChartData($hargaHistory, $selectedMonth);
         
         return view('harga.index', compact('hargaAktif', 'hargaHangus', 'chartData', 'selectedMonth'));
@@ -188,74 +192,62 @@ class HargaTelurController extends Controller
     private function prepareChartData($hargaHistory, $selectedMonth = null)
     {
         $datasets = [];
-        $colors = ['kandang' => '#3b82f6', 'grosir' => '#f59e0b', 'konsumen' => '#10b981'];
+        $colorMap = ['kandang' => '#3b82f6', 'grosir' => '#f59e0b', 'konsumen' => '#10b981'];
+        $rgbMap = [
+            'kandang' => 'rgba(59, 130, 246, 0.1)',
+            'grosir' => 'rgba(245, 158, 11, 0.1)',
+            'konsumen' => 'rgba(16, 185, 129, 0.1)'
+        ];
         $allDates = [];
         
-        // Build date index dari semua harga, filter by month jika ada
+        // OPTIMIZED: Single pass to build date index
         foreach ($hargaHistory as $jenis => $hargaList) {
             foreach ($hargaList as $h) {
-                // Filter by month if selected
-                if ($selectedMonth !== null) {
-                    $dateMonth = $h->tanggal_berlaku->format('Y-m');
-                    if ($dateMonth !== $selectedMonth) {
-                        continue;
-                    }
+                if ($selectedMonth === null || $h->tanggal_berlaku->format('Y-m') === $selectedMonth) {
+                    $dateKey = $h->tanggal_berlaku->format('Y-m-d');
+                    $allDates[$dateKey] = $h->tanggal_berlaku->format('d-m-Y');
                 }
-                $allDates[$h->tanggal_berlaku->format('Y-m-d')] = $h->tanggal_berlaku->format('d-m-Y');
             }
         }
         
-        // Sort dates chronologically
         ksort($allDates);
-        $sortedDates = array_values($allDates);
-
-        // Build datasets untuk setiap jenis harga
+        
+        // OPTIMIZED: Build datasets with single pass
         foreach ($hargaHistory as $jenis => $hargaList) {
-            $prices = [];
             $priceByDate = [];
             
-            // Map harga by tanggal_berlaku - ambil yang paling baru untuk setiap date
+            // Map harga by tanggal_berlaku - ambil yang paling baru
             foreach ($hargaList as $h) {
-                // Filter by month if selected
-                if ($selectedMonth !== null) {
-                    $dateMonth = $h->tanggal_berlaku->format('Y-m');
-                    if ($dateMonth !== $selectedMonth) {
-                        continue;
+                if ($selectedMonth === null || $h->tanggal_berlaku->format('Y-m') === $selectedMonth) {
+                    $dateKey = $h->tanggal_berlaku->format('Y-m-d');
+                    if (!isset($priceByDate[$dateKey]) || $h->created_at > $priceByDate[$dateKey]['created_at']) {
+                        $priceByDate[$dateKey] = [
+                            'harga' => $h->harga_per_kg,
+                            'created_at' => $h->created_at,
+                        ];
                     }
-                }
-                
-                $dateKey = $h->tanggal_berlaku->format('Y-m-d');
-                // Jika belum ada, atau yang ini lebih baru, simpan
-                if (!isset($priceByDate[$dateKey]) || $h->created_at > $priceByDate[$dateKey]['created_at']) {
-                    $priceByDate[$dateKey] = [
-                        'harga' => $h->harga_per_kg,
-                        'created_at' => $h->created_at,
-                    ];
                 }
             }
             
             // Build prices array sesuai urutan sorted dates
+            $prices = [];
             foreach ($allDates as $dateKey => $dateFormatted) {
-                if (isset($priceByDate[$dateKey])) {
-                    $prices[] = $priceByDate[$dateKey]['harga'];
-                } else {
-                    $prices[] = null; // atau bisa interpolate dari nilai sebelumnya
-                }
+                $prices[] = $priceByDate[$dateKey]['harga'] ?? null;
             }
 
             $datasets[] = [
                 'label' => ucfirst($jenis),
                 'data' => $prices,
-                'borderColor' => $colors[$jenis] ?? '#6b7280',
-                'backgroundColor' => str_replace(')', ', 0.1)', str_replace('rgb', 'rgba', $this->hexToRgb($colors[$jenis] ?? '#6b7280'))),
+                'borderColor' => $colorMap[$jenis] ?? '#6b7280',
+                'backgroundColor' => $rgbMap[$jenis] ?? 'rgba(107, 114, 128, 0.1)',
                 'tension' => 0.4,
                 'fill' => true,
-                'spanGaps' => true, // Connect across null values
+                'spanGaps' => true,
             ];
         }
 
         return [
-            'labels' => $sortedDates,
+            'labels' => array_values($allDates),
             'datasets' => $datasets,
         ];
     }

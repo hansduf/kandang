@@ -1,0 +1,69 @@
+@startuml
+|Pemilik|
+start
+:Buka Halaman User;
+|Sistem|
+:Tampilkan Daftar User;
+|Pemilik|
+:Pilih Aksi;
+if (Aksi?) then (Tambah)
+  :Klik Tambah User;
+  |Sistem|
+  :Tampilkan Form Input;
+  |Pemilik|
+  :Input Nama;
+  :Input Email;
+  :Input Password;
+  :Pilih Role;
+  if (Role Pekerja?) then (Ya)
+    :Pilih Kandang;
+  else (Pemilik)
+    :Gunakan Default;
+  endif
+  :Klik Simpan;
+  |Sistem|
+  :Validasi Email Unique;
+  if (Valid?) then (Ya)
+    :Hash Password;
+    :Simpan User ke DB;
+    :Assign Role;
+    if (Pekerja?) then (Ya)
+      :Assign Kandang;
+    endif
+    :Pesan Sukses;
+  else (Tidak)
+    :Tampilkan Error;
+  endif
+else if (Edit) then (Edit)
+  :Pilih User;
+  |Sistem|
+  :Load Data User;
+  |Pemilik|
+  :Edit Name/Email/Role;
+  :Klik Simpan;
+  |Sistem|
+  :Validasi Data;
+  if (Valid?) then (Ya)
+    :Update User;
+    :Update Role/Kandang jika berubah;
+    :Pesan Sukses;
+  else (Tidak)
+    :Tampilkan Error;
+  endif
+else (Hapus)
+  :Pilih User;
+  |Sistem|
+  :Tampilkan Konfirmasi;
+  |Pemilik|
+  if (Confirm?) then (Ya)
+    |Sistem|
+    :Hapus User;
+    :Hapus Permission Terkait;
+    :Pesan Sukses;
+  else (Tidak)
+    :Batal;
+  endif
+endif
+:Selesai;
+end
+@enduml

@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Scrollbar for All */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6 0%, #1e3a8a 100%);
+    border-radius: 5px;
+    border: 2px solid rgba(243, 244, 246, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #1e3a8a 100%);
+}
+
+/* Firefox Scrollbar */
+* {
+    scrollbar-color: #3b82f6 rgba(243, 244, 246, 0.5);
+    scrollbar-width: thin;
+}
+
+/* Sidebar Scrollbar - Darker variant */
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: rgba(30, 58, 138, 0.3);
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6 0%, #1e3a8a 100%);
+    border: 2px solid rgba(30, 58, 138, 0.3);
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #1e3a8a 100%);
+}
+
+.sidebar-scroll {
+    scrollbar-color: #3b82f6 rgba(30, 58, 138, 0.3);
+}

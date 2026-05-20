@@ -1,0 +1,42 @@
+@startuml
+|Pemilik|
+start
+:Buka Laporan Produksi;
+|Sistem|
+:Load Data Default (Bulan Ini);
+:Query Data Produksi;
+:Kalkulasi Summary (Total, Rata-rata);
+:Render Tabel & Grafik;
+|Pemilik|
+:Lihat Summary Produksi;
+:Lihat Tabel Detail;
+:Lihat Grafik Trend;
+:Pilih Periode (Harian/Bulanan/3-bulan/6-bulan);
+if (Ubah Kandang?) then (Ya)
+  :Pilih Kandang;
+else (Tidak)
+  :Gunakan Kandang Default;
+endif
+:Klik Apply Filter;
+|Sistem|
+:Query Data dengan Filter;
+if (Ada Data?) then (Ya)
+  :Tampilkan Data Baru;
+else (Tidak)
+  :Pesan "Belum Ada Data";
+endif
+|Pemilik|
+:Pilih Format Export;
+if (Format?) then (PDF)
+  |Sistem|
+  :Generate PDF;
+  :Download File;
+else (Excel)
+  |Sistem|
+  :Generate Excel;
+  :Download File;
+endif
+|Pemilik|
+:Selesai;
+end
+@enduml

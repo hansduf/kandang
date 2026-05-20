@@ -99,7 +99,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🐔 LAPORAN PENJUALAN TELUR</h1>
+        <h1>[LAPORAN] PENJUALAN TELUR</h1>
         <p>Hans Jaya Poultry</p>
         <p>Periode: {{ $periodeName ?? 'Periode' }}</p>
         <p>Tanggal Cetak: {{ now()->format('d/m/Y H:i') }}</p>

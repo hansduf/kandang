@@ -1,0 +1,662 @@
+================================================================================
+SKENARIO USE CASE - SISTEM MANAJEMEN & MONITORING PRODUKSI TELUR
+FORMAT SESUAI TEMPLATE STANDAR
+================================================================================
+
+================================================================================
+SKENARIO 1: LOGIN
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│              Skenario Login Sistem                      │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Login                                         |
+|---------------|-----------------------------------------------|
+| Actor         | Pekerja Kandang / Pemilik Peternakan         |
+| Tujuan        | Masuk ke sistem dengan kredensial yang valid |
+| Kondisi Awal  | Sistem menampilkan halaman login             |
+| Kondisi Akhir | Sistem menampilkan dashboard sesuai role     |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                          | Sistem                                    |
+|---|--------------------------------|-------------------------------------------|
+| 1 | User membuka aplikasi          | Sistem menampilkan halaman login          |
+| 2 | User memasukkan username       | Sistem menerima input username            |
+| 3 | User memasukkan password       | Sistem menerima input password            |
+| 4 | User klik tombol "Login"       | Sistem validasi kredensial di database    |
+| 5 |                                | Sistem memverifikasi role pengguna        |
+|   |                                | (pemilik / pekerja)                       |
+| 6 |                                | Sistem set session/token user             |
+| 7 |                                | Sistem redirect ke dashboard sesuai role  |
+| 8 |                                | Pekerja: Dashboard Pekerja Kandang        |
+|   |                                | Pemilik: Dashboard Pemilik Peternakan     |
+
+SKENARIO ALTERNATIF (Error Cases)
+
+A1. Username atau Password Salah
+    • Step 4: Sistem deteksi kredensial invalid
+    • Sistem tampilkan error: "Username/Password salah"
+    • Pengguna dapat retry login (Max 5 attempts)
+
+A2. Akun Terkunci (5+ failed login attempts)
+    • Sistem deteksi multiple failed attempts
+    • Sistem lock akun selama 30 menit
+    • Tampilkan pesan: "Akun terkunci. Hubungi administrator"
+    • Log security event untuk audit trail
+
+A3. Database Connection Error
+    • Sistem tidak dapat terhubung ke database
+    • Tampilkan error: "Server error. Coba lagi nanti"
+    • Log error untuk debugging
+
+
+================================================================================
+SKENARIO 2: INPUT PRODUKSI TELUR HARIAN
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│       Skenario Input Produksi Telur Harian             │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Input Produksi Telur Harian                  |
+|---------------|-----------------------------------------------|
+| Actor         | Pekerja Kandang                             |
+| Tujuan        | Mencatat hasil produksi telur harian        |
+| Kondisi Awal  | Pekerja sudah login, di halaman input       |
+| Kondisi Akhir | Data produksi tersimpan, stok bertambah     |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                              | Sistem                                    |
+|---|------------------------------------|-------------------------------------------|
+| 1 | Pekerja klik menu                  | Sistem tampilkan form input produksi      |
+|   | "Input Produksi Telur"             |                                           |
+| 2 |                                    | Sistem pre-fill kandang_id pekerja        |
+|   |                                    | (READ-ONLY, tidak bisa diubah)            |
+| 3 | Pekerja pilih tanggal produksi     | Sistem terima input tanggal               |
+| 4 | Pekerja pilih satuan               | Sistem terima pilihan: Butir / Kg         |
+|   | (Butir atau Kg)                    |                                           |
+| 5 | Pekerja input jumlah produksi      | Sistem terima input angka                 |
+| 6 | Pekerja input keterangan           | Sistem terima input keterangan (optional) |
+|   | (opsional)                         |                                           |
+| 7 | Pekerja klik "Simpan"              | Sistem validasi input:                    |
+|   |                                    | • Tanggal ≤ hari ini?                     |
+|   |                                    | • Jumlah > 0?                             |
+|   |                                    | • Kandang valid?                          |
+| 8 |                                    | IF valid → lanjut step 9                  |
+|   |                                    | IF tidak → tampilkan error message        |
+| 9 |                                    | Sistem konversi satuan otomatis:          |
+|   |                                    | Jika satuan = butir:                      |
+|   |                                    |   jumlah_butir = input                    |
+|   |                                    |   jumlah_kg = input / 16                  |
+|   |                                    | Jika satuan = kg:                         |
+|   |                                    |   jumlah_kg = input                       |
+|   |                                    |   jumlah_butir = input * 16               |
+| 10|                                    | Sistem simpan data ke tabel produksi_telur|
+| 11|                                    | Sistem update stok_telur:                 |
+|   |                                    | stok_butir += jumlah_butir                |
+|   |                                    | stok_kg = stok_butir / 16                 |
+| 12|                                    | Sistem commit transaction                 |
+| 13|                                    | Sistem tampilkan pesan sukses             |
+| 14|                                    | Sistem redirect ke halaman riwayat        |
+
+SKENARIO ALTERNATIF (Error Cases)
+
+A1. Input Jumlah Negatif atau Nol
+    • Step 7: Validasi gagal
+    • Tampilkan error: "Jumlah harus lebih dari 0"
+    • Pekerja perbaiki input dan retry
+
+A2. Tanggal Lebih Besar dari Hari Ini
+    • Step 7: Validasi gagal
+    • Tampilkan error: "Tanggal tidak boleh melebihi hari ini"
+    • Pekerja pilih ulang tanggal yang valid
+
+A3. Pekerja Mencoba Ubah Kandang
+    • Kandang field sudah READ-ONLY (disabled)
+    • Sistem tidak terima perubahan kandang_id
+    • Hanya kandang pekerja sendiri yang bisa input
+
+
+================================================================================
+SKENARIO 3: LIHAT DASHBOARD
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│            Skenario Lihat Dashboard                     │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Lihat Dashboard                             |
+|---------------|-----------------------------------------------|
+| Actor         | Pekerja Kandang / Pemilik Peternakan       |
+| Tujuan        | Melihat ringkasan data bisnis terkini      |
+| Kondisi Awal  | User sudah login, di halaman dashboard     |
+| Kondisi Akhir | Dashboard menampilkan cards & grafik       |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                          | Sistem                                    |
+|---|--------------------------------|-------------------------------------------|
+| 1 | User klik menu "Dashboard"     | Sistem mulai load page dashboard          |
+| 2 |                                | Sistem query stok_telur terkini           |
+| 3 |                                | Sistem query produksi hari ini            |
+|   |                                | (SUM jumlah_butir WHERE tanggal = hari ini)|
+| 4 |                                | Sistem query penjualan bulan ini          |
+|   |                                | (SUM total_harga WHERE bulan = sekarang)  |
+| 5 |                                | Sistem query kandang aktif                |
+|   |                                | (COUNT WHERE status = 'aktif')            |
+| 6 |                                | Sistem query produksi 7 hari terakhir     |
+|   |                                | (untuk grafik)                            |
+| 7 |                                | Sistem render 4 summary cards:            |
+|   |                                | • Card 1: Stok Telur (butir & kg)         |
+|   |                                | • Card 2: Produksi Hari Ini (butir)       |
+|   |                                | • Card 3: Penjualan Bulan Ini (Rp)        |
+|   |                                | • Card 4: Kandang Aktif (jumlah)          |
+| 8 |                                | Sistem render grafik bar:                 |
+|   |                                | Produksi 7 hari terakhir (butir)          |
+| 9 | User melihat ringkasan data    | Dashboard siap untuk interaksi             |
+
+SKENARIO ALTERNATIF (Conditional)
+
+A1. Data Belum Ada (Pertama Kali Buka)
+    • Card menampilkan nilai 0
+    • Grafik menampilkan placeholder text
+    • Rekomendasi: "Silakan input produksi"
+
+A2. Pekerja Kandang - Dashboard Terbatas
+    • Hanya lihat: Stok, Produksi hari ini, Dashboard umum
+    • TIDAK bisa: Lihat penjualan, analytics detail
+
+A3. Pemilik Peternakan - Dashboard Lengkap
+    • Lihat semua metric (stok, produksi semua kandang, penjualan)
+    • Quick links ke: Laporan, Settings, etc
+
+
+================================================================================
+SKENARIO 4: LIHAT RIWAYAT PRODUKSI
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│         Skenario Lihat Riwayat Produksi                │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Lihat Riwayat Produksi                     |
+|---------------|-----------------------------------------------|
+| Actor         | Pekerja Kandang / Pemilik Peternakan       |
+| Tujuan        | Melihat histori pencatatan produksi telur  |
+| Kondisi Awal  | User sudah login, buka halaman riwayat     |
+| Kondisi Akhir | Sistem tampilkan tabel riwayat produksi    |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                                 | Sistem                                |
+|---|---------------------------------------|---------------------------------------|
+| 1 | User klik menu                        | Sistem menampilkan halaman riwayat    |
+|   | "Lihat Riwayat Produksi"              | produksi                              |
+| 2 |                                       | Sistem query tabel produksi_telur     |
+|   |                                       | (filter by user/kandang jika pekerja) |
+| 3 |                                       | Sistem tampilkan tabel dengan kolom:  |
+|   |                                       | No, Tanggal, Kandang, Satuan, Jumlah, |
+|   |                                       | Konversi (Butir/Kg)                   |
+| 4 |                                       | Sistem urutkan by tanggal DESC        |
+|   |                                       | (terbaru duluan)                      |
+| 5 | User scroll atau klik pagination      | Sistem menampilkan data per halaman   |
+|   |                                       | (10/20 records per page)              |
+
+SKENARIO ALTERNATIF (Filter & Action)
+
+A1. Pekerja Kandang - View Own Data Only
+    • Hanya melihat riwayat produksi kandang mereka
+    • TIDAK bisa lihat kandang lain
+    • TIDAK ada tombol Edit/Delete
+
+A2. Pemilik Peternakan - Full Access
+    • Bisa filter by kandang (dropdown)
+    • Bisa filter by tanggal (date range)
+    • Bisa lihat riwayat semua kandang
+
+A3. Edit Data - Pemilik Only
+    • Klik tombol "Edit" pada row
+    • Buka form dengan data terpopulasi
+    • Ubah qty, satuan, tanggal jika perlu
+    • Sistem re-konversi satuan
+    • Sistem hitung delta stok & update
+
+A4. Delete Data - Pemilik Only
+    • Klik tombol "Delete" pada row
+    • Confirm dialog: "Apakah Anda yakin?"
+    • Sistem kurangi stok (reverse)
+    • Sistem delete record produksi_telur
+    • Reload tabel
+
+
+================================================================================
+SKENARIO 5: LIHAT STOK TELUR
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│          Skenario Lihat Stok Telur                      │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Lihat Stok Telur                           |
+|---------------|-----------------------------------------------|
+| Actor         | Pekerja Kandang / Pemilik Peternakan       |
+| Tujuan        | Mengetahui jumlah stok telur saat ini      |
+| Kondisi Awal  | User sudah login                            |
+| Kondisi Akhir | Sistem tampilkan info stok (butir & kg)    |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | User klik menu "Lihat Stok Telur"  | Sistem query tabel stok_telur          |
+| 2 |                                    | SELECT * FROM stok_telur LIMIT 1       |
+| 3 |                                    | Sistem tampilkan panel stok:            |
+|   |                                    | • Stok Butir: X butir                   |
+|   |                                    | • Stok Kilogram: Y kg                   |
+| 4 |                                    | Sistem tampilkan last updated timestamp |
+| 5 |                                    | Sistem check status stok:               |
+|   |                                    | IF stok_butir > 200: "AMAN"             |
+|   |                                    | IF stok_butir 0-200: "MENIPIS" (warning)|
+|   |                                    | IF stok_butir = 0: "HABIS" (alert)      |
+| 6 | User melihat info stok              | System siap untuk transaksi             |
+
+SKENARIO ALTERNATIF (Alert Logic)
+
+A1. Stok Menipis (kurang dari 200 butir)
+    • Sistem tampilkan warning (YELLOW)
+    • Pesan: "Stok menipis, pertimbangkan input produksi"
+    • Optional: Suggestion ke menu Input Produksi
+
+A2. Stok Habis (0 butir)
+    • Sistem tampilkan alert (RED)
+    • Pesan: "STOK HABIS! Segera input produksi baru"
+    • Disable penjualan (jika diperlukan)
+
+A3. Riwayat Stok - Pemilik Only (Optional)
+    • Pemilik bisa lihat histori perubahan stok
+    • Tabel: Tanggal, Jenis, Qty, Saldo, Keterangan
+    • 10 perubahan terakhir
+
+
+================================================================================
+SKENARIO 6: KELOLA DATA KANDANG
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│        Skenario Kelola Data Kandang                     │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Kelola Data Kandang                        |
+|---------------|-----------------------------------------------|
+| Actor         | Pemilik Peternakan                         |
+| Tujuan        | Menambah, mengubah, atau menghapus kandang |
+| Kondisi Awal  | Pemilik login, buka halaman daftar kandang |
+| Kondisi Akhir | Data kandang tersimpan/terupdate/terhapus  |
+
+SKENARIO UTAMA - TAMBAH KANDANG (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik tombol                | Sistem tampilkan form input kandang    |
+|   | "+ Tambah Kandang"                 | kosong                                  |
+| 2 | Pemilik input nama kandang         | Sistem terima input text               |
+| 3 | Pemilik input jumlah ayam          | Sistem terima input numeric            |
+| 4 | Pemilik input keterangan (opt)     | Sistem terima input                    |
+| 5 | Pemilik pilih status (aktif/nonaktif)| Sistem terima pilihan radio           |
+| 6 | Pemilik klik "Simpan"              | Sistem validasi:                       |
+|   |                                    | • Nama tidak boleh kosong              |
+|   |                                    | • Nama tidak boleh duplikat            |
+|   |                                    | • Jumlah ayam >= 0                     |
+| 7 |                                    | IF valid → step 8                      |
+|   |                                    | IF tidak → error message               |
+| 8 |                                    | Sistem INSERT data ke tabel kandang    |
+| 9 |                                    | Sistem redirect ke daftar kandang      |
+| 10|                                    | Tampilkan success: "Kandang ditambahkan"
+
+SKENARIO ALTERNATIF - EDIT KANDANG
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik tombol "Edit"         | Sistem tampilkan form dengan data      |
+|   | pada kandang tertentu              | terpopulasi                            |
+| 2 | Pemilik ubah nama kandang          | Sistem terima input                    |
+| 3 | Pemilik ubah jumlah ayam           | Sistem terima input                    |
+| 4 | Pemilik ubah status                | Sistem terima pilihan                  |
+| 5 | Pemilik klik "Simpan"              | Sistem validasi (sama seperti tambah)  |
+| 6 |                                    | Sistem UPDATE tabel kandang            |
+| 7 |                                    | Redirect ke daftar kandang             |
+| 8 |                                    | Success: "Kandang diperbarui"          |
+
+SKENARIO ALTERNATIF - HAPUS KANDANG
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik tombol "Hapus"        | Sistem tampilkan confirm dialog:       |
+|   | pada kandang                       | "Apakah Anda yakin menghapus kandang?" |
+| 2 | Pemilik confirm "Ya, hapus"        | Sistem check relasi:                   |
+|   |                                    | • Ada produksi di kandang ini?         |
+|   |                                    | • Ada pekerja di kandang ini?          |
+| 3 |                                    | IF ada relasi → tampilkan warning      |
+|   |                                    | "Data terkait akan dihapus (cascade)"  |
+| 4 |                                    | Sistem start transaction               |
+| 5 |                                    | Sistem DELETE produksi_telur (cascade) |
+| 6 |                                    | Sistem UPDATE users kandang_id = NULL  |
+| 7 |                                    | Sistem DELETE kandang                  |
+| 8 |                                    | Sistem commit transaction              |
+| 9 |                                    | Redirect & success message             |
+
+
+================================================================================
+SKENARIO 7: KELOLA MASTER HARGA TELUR
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│      Skenario Kelola Master Harga Telur                │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Kelola Master Harga Telur                 |
+|---------------|-----------------------------------------------|
+| Actor         | Pemilik Peternakan                         |
+| Tujuan        | Mengatur harga telur sesuai referensi pasar|
+| Kondisi Awal  | Pemilik login, buka halaman master harga  |
+| Kondisi Akhir | Harga tersimpan historis, siap transaksi  |
+
+SKENARIO UTAMA - TAMBAH HARGA BARU (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik tombol                | Sistem tampilkan form input harga     |
+|   | "+ Tambah Harga Telur"             | kosong                                 |
+| 2 | Pemilik pilih jenis harga          | Sistem terima pilihan:                |
+|   | (Kandang/Grosir/Konsumen)          | • Kandang (borongan)                  |
+|   |                                    | • Grosir                              |
+|   |                                    | • Konsumen (eceran)                   |
+| 3 | Pemilik input harga per kg         | Sistem terima input numeric           |
+|   | (contoh: 24000)                    |                                       |
+| 4 | Pemilik input harga per butir      | Sistem terima input (optional)        |
+|   | (optional, auto: kg/16)            | Jika kosong → auto-calc = harga_kg/16 |
+| 5 |                                    | Sistem auto-fill tanggal_berlaku      |
+|   |                                    | = hari ini (READ-ONLY)                |
+| 6 | Pemilik input referensi/sumber     | Sistem terima input (optional)        |
+|   | (contoh: "Pasar Tradisional")      |                                       |
+| 7 | Pemilik klik "Simpan"              | Sistem validasi:                      |
+|   |                                    | • Jenis harga dipilih?                |
+|   |                                    | • Harga per kg > 0?                   |
+|   |                                    | • Tidak duplikat (jenis+tgl)?         |
+| 8 |                                    | IF valid → INSERT ke harga_telur      |
+|   |                                    | IF tidak → error message              |
+| 9 |                                    | IMPORTANT: Harga lama TIDAK dihapus   |
+|   |                                    | (keep untuk referensi historis)       |
+| 10|                                    | Success: "Harga ditambahkan"          |
+|   |                                    | Redirect ke halaman harga             |
+
+SKENARIO ALTERNATIF - LIHAT RIWAYAT HARGA
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik buka halaman riwayat harga | Sistem query SEMUA harga (dari dulu)  |
+| 2 | Pemilik bisa filter by jenis       | Sistem filter by dropdown             |
+| 3 | Pemilik bisa filter by tanggal     | Sistem filter by date range           |
+| 4 |                                    | Sistem urutkan by tanggal DESC        |
+|   |                                    | (terbaru duluan)                      |
+| 5 |                                    | Highlight harga terbaru per jenis     |
+| 6 | Pemilik melihat riwayat lengkap    | Untuk referensi historis transaksi   |
+
+PENTING - SISTEM HARGA TELUR:
+✓ NEVER Edit harga lama (gunakan new record saja)
+✓ NEVER Delete harga (untuk referensi transaksi)
+✓ Harga baru berlaku otomatis untuk penjualan berikutnya
+✓ Transaksi penjualan referensi ke harga_telur_id spesifik
+✓ Jika harga berubah, riwayat transaksi lama NOT AFFECTED
+
+
+================================================================================
+SKENARIO 8: INPUT PENJUALAN TELUR
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│        Skenario Input Penjualan Telur                  │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Input Penjualan Telur                     |
+|---------------|-----------------------------------------------|
+| Actor         | Pemilik Peternakan                         |
+| Tujuan        | Mencatat transaksi penjualan (multi items) |
+| Kondisi Awal  | Pemilik login, buka halaman input penjualan|
+| Kondisi Akhir | Transaksi tersimpan, stok berkurang        |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik "Input Penjualan"     | Sistem tampilkan form penjualan       |
+| 2 | Pemilik input tanggal jual         | Sistem terima input, validasi ≤ hari |
+| 3 | Pemilik input nama pembeli         | Sistem terima input                   |
+| 4 | Pemilik klik "[+ TAMBAH ITEM]"     | Sistem tampilkan row item kosong      |
+| 5 | Pemilik pilih jenis/harga telur    | Sistem popup dropdown harga terbaru   |
+|   |                                    | (bisa ubah manual jika perlu)         |
+| 6 | Pemilik pilih satuan (butir/kg)    | Sistem terima pilihan satuan          |
+| 7 | Pemilik input jumlah               | Sistem terima input angka             |
+|   |                                    | Validasi vs stok tersedia             |
+| 8 |                                    | Sistem auto-konversi satuan           |
+|   |                                    | Sistem auto-hitung subtotal           |
+| 9 | Pemilik klik "[+ TAMBAH ITEM]"     | Sistem tambah row item baru           |
+|   | (jika ada lebih dari 1 item)       | (repeat step 5-8 untuk item berikutnya|
+| 10| Pemilik review total harga         | Sistem tampilkan total penjualan      |
+| 11| Pemilik klik "[PROSES PENJUALAN]"  | START TRANSACTION di server:          |
+|   |                                    |                                       |
+|   |                                    | VALIDASI HEADER:                      |
+|   |                                    | • Tanggal ≤ hari ini?                 |
+|   |                                    | • Min 1 item?                         |
+|   |                                    |                                       |
+|   |                                    | VALIDASI PER-ITEM:                    |
+|   |                                    | LOOP setiap item:                     |
+|   |                                    | • Harga valid?                        |
+|   |                                    | • Jumlah > 0?                         |
+|   |                                    | • Satuan valid?                       |
+|   |                                    |                                       |
+| 12|                                    | KONVERSI SATUAN PER-ITEM:             |
+|   |                                    | LOOP setiap item:                     |
+|   |                                    | IF satuan = 'kg':                     |
+|   |                                    |   qty_butir = qty_input * 16          |
+|   |                                    |   qty_kg = qty_input                  |
+|   |                                    | ELSE (butir):                         |
+|   |                                    |   qty_butir = qty_input               |
+|   |                                    |   qty_kg = qty_input / 16             |
+|   |                                    |                                       |
+| 13|                                    | CEK STOK TOTAL:                       |
+|   |                                    | total_butir = SUM(qty_butir per item) |
+|   |                                    | IF total_butir > stok_saat_ini:       |
+|   |                                    |   ERROR: "Stok tidak cukup!"          |
+|   |                                    |   ROLLBACK transaction                |
+|   |                                    | ELSE → lanjut step 14                 |
+|   |                                    |                                       |
+| 14|                                    | HITUNG TOTAL HARGA:                   |
+|   |                                    | total = 0                             |
+|   |                                    | LOOP setiap item:                     |
+|   |                                    |   subtotal = qty * harga_satuan       |
+|   |                                    |   total += subtotal                   |
+|   |                                    |                                       |
+| 15|                                    | INSERT PENJUALAN:                     |
+|   |                                    | INSERT INTO penjualan                 |
+|   |                                    | (user_id, tanggal_jual, nama_pembeli, |
+|   |                                    |  total_harga, keterangan)             |
+|   |                                    | → Get $penjualan_id                   |
+|   |                                    |                                       |
+| 16|                                    | INSERT DETAIL PENJUALAN:              |
+|   |                                    | LOOP setiap item:                     |
+|   |                                    | INSERT INTO detail_penjualan          |
+|   |                                    | (penjualan_id, harga_telur_id,        |
+|   |                                    |  satuan_jual, jumlah_jual, jumlah_butir|
+|   |                                    |  jumlah_kg, harga_satuan, subtotal)   |
+|   |                                    |                                       |
+| 17|                                    | UPDATE STOK:                          |
+|   |                                    | UPDATE stok_telur                     |
+|   |                                    | SET stok_butir -= total_butir_diambil |
+|   |                                    | stok_kg = stok_butir / 16             |
+|   |                                    | updated_at = NOW()                    |
+|   |                                    |                                       |
+| 18|                                    | COMMIT TRANSACTION                    |
+|   |                                    |                                       |
+| 19|                                    | Success message:                      |
+|   |                                    | "Penjualan berhasil! Ref: #PJL-001"   |
+| 20|                                    | Redirect ke laporan/riwayat penjualan |
+
+SKENARIO ALTERNATIF (Error Cases)
+
+A1. Stok Tidak Cukup
+    • Step 13: Validasi gagal
+    • ROLLBACK semua transaksi
+    • Error: "Stok tidak cukup untuk item [nama item]"
+    • Pemilik kurangi qty atau hapus item
+
+A2. Harga Tidak Ditemukan
+    • Step 5: Dropdown harga kosong (belum input harga)
+    • Error: "Harga telur belum di-input hari ini"
+    • Pemilik harus input harga dulu di menu Master Harga
+
+A3. Jumlah Negatif
+    • Step 7: Validasi gagal
+    • Error: "Jumlah harus lebih dari 0"
+
+
+================================================================================
+SKENARIO 9: LIHAT LAPORAN PRODUKSI
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│       Skenario Lihat Laporan Produksi                  │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Lihat Laporan Produksi                    |
+|---------------|-----------------------------------------------|
+| Actor         | Pemilik Peternakan                         |
+| Tujuan        | Melihat analisis produksi (tabel & grafik)|
+| Kondisi Awal  | Pemilik login, buka halaman laporan       |
+| Kondisi Akhir | Laporan menampilkan visualisasi data      |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik "Laporan Produksi"    | Sistem tampilkan halaman laporan      |
+| 2 |                                    | Auto-set filter:                      |
+|   |                                    | Bulan = bulan saat ini                |
+|   |                                    | Tahun = tahun saat ini                |
+| 3 | Pemilik ubah bulan/tahun (opt)     | Sistem terima filter input            |
+| 4 | Pemilik klik "[TAMPILKAN LAPORAN]" | Sistem query produksi_telur           |
+| 5 |                                    | Hitung sum produksi per hari          |
+| 6 |                                    | Hitung sum produksi per kandang       |
+| 7 |                                    | Render grafik garis: Produksi harian  |
+| 8 |                                    | Render grafik donut: per kandang      |
+| 9 |                                    | Tampilkan tabel detail:               |
+|   |                                    | No, Tanggal, Kandang, Satuan, Jumlah  |
+| 10| Pemilik melihat laporan lengkap    | System siap untuk export              |
+
+SKENARIO ALTERNATIF (Export & Filter)
+
+A1. Export ke PDF
+    • Pemilik klik "[EXPORT PDF]"
+    • Sistem generate PDF (include tabel & grafik)
+    • Download: laporan-produksi-2026-04.pdf
+
+A2. Export ke Excel
+    • Pemilik klik "[EXPORT EXCEL]"
+    • Sistem generate Excel file
+    • Download: laporan-produksi-2026-04.xlsx
+
+A3. Data Kosong (Periode tidak ada data)
+    • Sistem tampilkan: "Data belum ada untuk periode ini"
+    • Grafik tampilkan placeholder
+
+A4. Filter per Kandang (optional)
+    • Pemilik pilih kandang spesifik di filter
+    • Laporan hanya tampilkan data kandang tersebut
+
+
+================================================================================
+SKENARIO 10: LIHAT LAPORAN PENJUALAN
+================================================================================
+
+┌─────────────────────────────────────────────────────────┐
+│       Skenario Lihat Laporan Penjualan                 │
+└─────────────────────────────────────────────────────────┘
+
+| Nama          | Lihat Laporan Penjualan                   |
+|---------------|-----------------------------------------------|
+| Actor         | Pemilik Peternakan                         |
+| Tujuan        | Melihat histori & analisis penjualan      |
+| Kondisi Awal  | Pemilik login, buka halaman laporan       |
+| Kondisi Akhir | Laporan penjualan menampilkan data detail |
+
+SKENARIO UTAMA (Basic Flow)
+
+| # | Actor                              | Sistem                                |
+|---|------------------------------------|-----------------------------------------|
+| 1 | Pemilik klik "Laporan Penjualan"   | Sistem tampilkan halaman laporan      |
+| 2 |                                    | Auto-set filter:                      |
+|   |                                    | Bulan = sekarang, Tahun = sekarang    |
+| 3 | Pemilik ubah filter (bulan/tahun)  | Sistem terima filter input            |
+| 4 | Pemilik klik "[TAMPILKAN LAPORAN]" | Sistem query penjualan & detail       |
+| 5 |                                    | Hitung sum total_harga per periode    |
+| 6 |                                    | Render grafik bar: Penjualan per hari |
+| 7 |                                    | Tampilkan summary cards:              |
+|   |                                    | • Total Transaksi (jumlah)            |
+|   |                                    | • Total Harga (Rp)                    |
+|   |                                    | • Rata-rata Transaksi (Rp)            |
+| 8 |                                    | Tampilkan tabel penjualan:            |
+|   |                                    | No, Tanggal, Pembeli, Items, Total    |
+| 9 | Pemilik klik icon "▸" (expand)     | Sistem tampilkan modal detail item    |
+| 10|                                    | Modal tampilkan:                      |
+|   |                                    | - Tanggal & pembeli                   |
+|   |                                    | - List items (qty, harga, subtotal)   |
+|   |                                    | - Total harga besar                   |
+| 11| Pemilik close modal                | Kembali ke tabel                      |
+
+SKENARIO ALTERNATIF (Export & Action)
+
+A1. Export ke PDF
+    • Pemilik klik "[EXPORT PDF]"
+    • Sistem generate PDF (include tabel detail)
+    • Download file
+
+A2. Export ke Excel
+    • Pemilik klik "[EXPORT EXCEL]"
+    • Sistem generate Excel
+    • Download file
+
+A3. Edit Transaksi (Optional - Pemilik)
+    • Pemilik klik "[EDIT]" pada transaksi
+    • Buka form dengan data terpopulasi
+    • Ubah qty item (validasi stok)
+    • Update stok dengan delta
+    • Simpan perubahan
+
+A4. Delete Transaksi (Optional - Pemilik)
+    • Pemilik klik "[DELETE]" pada transaksi
+    • Confirm dialog
+    • Sistem reverse (kembalikan stok)
+    • Delete transaksi & detail-nya
+    • Reload tabel
+
+
+================================================================================
+END OF SCENARIOS
+================================================================================
+
+SUMMARY SEMUA SKENARIO:
+✓ Skenario 1: Login ............................ ✓ LENGKAP
+✓ Skenario 2: Input Produksi Harian ........... ✓ LENGKAP
+✓ Skenario 3: Lihat Dashboard ................. ✓ LENGKAP
+✓ Skenario 4: Lihat Riwayat Produksi ......... ✓ LENGKAP
+✓ Skenario 5: Lihat Stok Telur ................ ✓ LENGKAP
+✓ Skenario 6: Kelola Kandang .................. ✓ LENGKAP
+✓ Skenario 7: Kelola Harga Telur .............. ✓ LENGKAP
+✓ Skenario 8: Input Penjualan ................. ✓ LENGKAP
+✓ Skenario 9: Lihat Laporan Produksi ......... ✓ LENGKAP
+✓ Skenario 10: Lihat Laporan Penjualan ....... ✓ LENGKAP
+
+TOTAL: 10 SKENARIO COMPLETE | FORMAT SESUAI TEMPLATE STANDAR

@@ -1,0 +1,236 @@
+@startuml HansJayaPoultrySystem
+!define MODEL_BG #E1F5FE
+!define SERVICE_BG #F3E5F5
+!define SINGLETON_BG #FFFACD
+!define COMPUTED_BG #E0F2F1
+
+' ============ MODELS ============
+
+class User <<Laravel::Model>> #MODEL_BG {
+  - id: bigint (PK)
+  - name: string
+  - username: string (unique)
+  - email: string (unique)
+  - email_verified_at: timestamp (nullable)
+  - password: string
+  - role: string [pemilik|pekerja]
+  - kandang_id: bigint (FK, nullable)
+  - remember_token: string (nullable)
+  - created_at: timestamp
+  - updated_at: timestamp
+  ---
+  + kandang(): BelongsTo<Kandang>
+  + produksiTelur(): HasMany<ProduksiTelur>
+  + penjualan(): HasMany<Penjualan>
+  + hargaTelur(): HasMany<HargaTelur>
+}
+
+class Kandang <<Laravel::Model>> #MODEL_BG {
+  - id: bigint (PK)
+  - nama_kandang: string(100)
+  - jumlah_ayam: unsigned int (default: 0)
+  - keterangan: text (nullable)
+  - status: enum[aktif|nonaktif] (default: aktif)
+  - pic_id: bigint (FK, nullable)
+  - created_at: timestamp
+  - updated_at: timestamp
+  ---
+  + pic(): BelongsTo<User>
+  + produksiTelur(): HasMany<ProduksiTelur>
+  + stokTelur(): HasOne<StokTelur>
+}
+
+class ProduksiTelur <<Laravel::Model,Immutable>> #MODEL_BG {
+  - id: bigint (PK)
+  - kandang_id: bigint (FK)
+  - user_id: bigint (FK)
+  - tanggal_produksi: date
+  - satuan_input: enum[butir|kg]
+  - jumlah_input: decimal(10,2)
+  - jumlah_butir: unsigned int (default: 0)
+  - jumlah_kg: decimal(10,3) (default: 0)
+  - keterangan: text (nullable)
+  - ayam_hidup: unsigned int (default: 0)
+  - hdp: decimal(5,2) [%] Hen Day Production
+  - hhp: decimal(5,2) [%] Hen House Production
+  - mortality: decimal(5,2) [%] Mortality Rate
+  - created_at: timestamp
+  - updated_at: timestamp (immutable)
+  ---
+  + kandang(): BelongsTo<Kandang>
+  + user(): BelongsTo<User>
+  ' Cannot be modified after creation
+}
+
+class HargaTelur <<Laravel::Model,Temporal>> #MODEL_BG {
+  - id: bigint (PK)
+  - jenis_harga: enum[kandang|grosir|konsumen]
+  - harga_per_kg: decimal(12,2)
+  - harga_per_butir: decimal(12,2) (nullable)
+  - tanggal_berlaku: date
+  - tanggal_akhir: date (nullable)
+  - status: enum[aktif|hangus] (default: aktif)
+  - user_id: bigint (FK)
+  - keterangan: text (nullable)
+  - created_at: timestamp
+  - updated_at: timestamp
+  ---
+  + user(): BelongsTo<User>
+  + detailPenjualan(): HasMany<DetailPenjualan>
+  ' Versioned pricing with effective dates
+}
+
+class DetailPenjualan <<Laravel::Model,Snapshot>> #MODEL_BG {
+  - id: bigint (PK)
+  - penjualan_id: bigint (FK)
+  - harga_telur_id: bigint (FK)
+  - satuan_jual: enum[butir|kg]
+  - jumlah_jual: decimal(10,2)
+  - jumlah_butir: unsigned int (default: 0)
+  - jumlah_kg: decimal(10,3) (default: 0)
+  - jam_penjualan: time (nullable)
+  - harga_satuan: decimal(12,2)
+  - harga_per_butir_saat_jual: decimal(12,2) (nullable)
+  - harga_per_kg_saat_jual: decimal(12,2) (nullable)
+  - subtotal: decimal(15,2) (default: 0)
+  - created_at: timestamp
+  - updated_at: timestamp
+  ---
+  + penjualan(): BelongsTo<Penjualan>
+  + hargaTelur(): BelongsTo<HargaTelur>
+  ' Immutable snapshot of price at sale time
+}
+
+class Penjualan <<Laravel::Model>> #MODEL_BG {
+  - id: bigint (PK)
+  - user_id: bigint (FK)
+  - tanggal_jual: date
+  - nama_pembeli: string(100) (nullable)
+  - total_harga: decimal(15,2) (default: 0)
+  - keterangan: text (nullable)
+  - created_at: timestamp
+  - updated_at: timestamp
+  ---
+  + user(): BelongsTo<User>
+  + detailPenjualan(): HasMany<DetailPenjualan>
+}
+
+class StokTelur <<Laravel::Model,Computed>> #COMPUTED_BG {
+  - id: bigint (PK)
+  - stok_butir: unsigned int (default: 0)
+  - stok_kg: decimal(10,3) (default: 0)
+  - updated_at: timestamp
+  ---
+  ' Computed as: SUM(ProduksiTelur) - SUM(DetailPenjualan)
+  ' Calculation performed via StockService
+}
+
+class Pengaturan <<Laravel::Model,Singleton>> #SINGLETON_BG {
+  - id: bigint (PK)
+  - kunci: string(100) (unique)
+  - nilai: string(255)
+  - tipe_data: enum[string|integer|decimal|boolean]
+  - keterangan: text (nullable)
+  - updated_at: timestamp
+  ---
+  ' System-wide configuration (e.g. conversion ratios)
+}
+
+' ============ SERVICES ============
+
+class StockService <<Laravel::Service>> #SERVICE_BG {
+  + calculateAvailableStock(kandang_id): StokRecord
+  + getStokPerKandang(kandang_id): StokTelur
+  + updateStokAfterSales(penjualanId): bool
+  + updateStokAfterProduction(produksiId): bool
+  + getStokHistory(kandang_id): Collection
+  + validateStokCukup(detail): bool
+  + convertUnits(quantity, from, to): decimal
+  '''
+  ' Centralizes inventory accounting logic
+  ' Uses cumulative approach: opening + production - sales
+}
+
+' ============ RELATIONSHIPS ============
+
+User "1" -- "0..1" Kandang : " assign\nto"
+User "1" -- "*" ProduksiTelur : " input"
+User "1" -- "*" Penjualan : " create"
+User "1" -- "*" HargaTelur : " set\nprice"
+
+Kandang "1" -- "*" ProduksiTelur : " has\nproduction"
+Kandang "1" -- "1" StokTelur : " tracks\n1:1"
+
+HargaTelur "1" -- "*" DetailPenjualan : " reference\nprice"
+
+Penjualan "1" -- "*" DetailPenjualan : " contains\nitems"
+
+ProduksiTelur "*" --> "1" StockService : " feeds\ndata to"
+DetailPenjualan "*" --> "1" StockService : " updates\nstock via"
+Pengaturan "*" <-- "1" StockService : " reads\nconfig"
+
+' ============ NOTES ============
+
+note right of User
+  **Authentication & RBAC**
+  - Roles: pemilik (owner), pekerja (worker)
+  - Each user can be assigned to a kandang
+  - Supervisor-operator relationship via pic_id
+end note
+
+note right of Kandang
+  **Operational Units**
+  - Physical coops/cages
+  - Contains multiple production records
+  - pic_id = supervisor (FK to users)
+end note
+
+note right of ProduksiTelur
+  **Production Logs**
+  - <<Immutable>> audit trail
+  - Cannot be modified after creation
+  - Tracks health metrics: HDP/HHP/mortality
+  - Dual unit storage (butir + kg)
+end note
+
+note right of HargaTelur
+  **Temporal Pricing**
+  - Multiple price tiers: kandang/grosir/konsumen
+  - Versioned with effective dates
+  - Status: aktif = active, hangus = expired
+  - Never delete; mark hangus instead
+end note
+
+note right of DetailPenjualan
+  **Transaction Line Items**
+  - <<Snapshot>> immutable price at sale time
+  - Stores price_per_butir/kg_saat_jual
+  - Prevents historical sales corruption
+  - Tracks optional jam_penjualan (sale time)
+end note
+
+note right of StokTelur
+  **Real-time Inventory**
+  - <<Computed>> via StockService
+  - Formula: SUM(produksi) - SUM(penjualan)
+  - Updated after each transaction
+  - Tracks both units
+end note
+
+note right of Pengaturan
+  **System Configuration**
+  - <<Singleton>> pattern
+  - Key examples: conversion_ratio, default_price_type
+  - kunci (key) must be unique
+  - tipe_data defines value type
+end note
+
+note right of StockService
+  **Business Logic**
+  - Centralizes inventory calculations
+  - Unit conversion (butir ↔ kg)
+  - Prevents N+1 queries via eager loading
+  - Timestamps all operations
+end note
+
+@enduml

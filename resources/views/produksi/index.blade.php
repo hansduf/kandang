@@ -13,7 +13,7 @@
         <!-- Kandang Info (untuk pekerja) -->
         @role('pekerja')
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-4">
-                <span class="text-3xl">🏠</span>
+                <i class="fas fa-warehouse text-blue-900 text-3xl"></i>
                 <div>
                     <p class="text-sm text-gray-600">Kandang yang Anda kelola:</p>
                     <p class="text-xl font-bold text-gray-900">{{ auth()->user()->kandang->nama_kandang ?? 'Belum ditentukan' }}</p>

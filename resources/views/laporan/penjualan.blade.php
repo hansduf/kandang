@@ -75,7 +75,7 @@
                 <p class="text-gray-600 text-xs mt-1">{{ number_format($totalProduktKgCalc, 2, ',', '.') }} kg</p>
             </div>
             <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-sm p-6 border border-yellow-200">
-                <p class="text-yellow-600 text-sm font-medium">Selisih Stok</p>
+                <p class="text-yellow-600 text-sm font-medium">Stock Telur</p>
                 <p class="text-3xl font-bold text-yellow-900 mt-2">{{ number_format($selisihButir, 0, ',', '.') }}</p>
                 <p class="text-gray-600 text-xs mt-1">{{ number_format($selisihKg, 2, ',', '.') }} kg</p>
             </div>

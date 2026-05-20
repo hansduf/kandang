@@ -1,0 +1,47 @@
+@startuml
+start
+:User Buka Aplikasi;
+if (Sudah Login?) then (Ya)
+  :Skip Login;
+else (Tidak)
+  :Login dengan Email & Password;
+  :Validasi Kredensial;
+endif
+:Tampilkan Dashboard;
+if (Role?) then (Pemilik)
+  :Akses Semua Fitur;
+  :Pilih Menu;
+  if (Menu?) then (Kandang)
+    :Kelola Kandang (CRUD);
+  else if (Menu Harga?) then (Harga)
+    :Kelola Harga (CRUD);
+  else if (Menu Penjualan?) then (Penjualan)
+    :Input Penjualan Multi-Item;
+    :Validasi & Proses;
+  else if (Menu Laporan?) then (Laporan)
+    :Lihat Laporan (Produksi/Penjualan/Stok);
+    :Filter & Export;
+  else if (Menu User?) then (User)
+    :Kelola User (CRUD);
+  else if (Menu Setting?) then (Setting)
+    :Pengaturan Sistem;
+  else (Profil)
+    :Edit Profil;
+  endif
+else (Pekerja)
+  :Akses Fitur Terbatas;
+  :Pilih Menu;
+  if (Menu?) then (Produksi)
+    :Input Produksi Harian;
+    :Auto-Calc Metrics;
+    :Update Stok;
+  else if (Menu Dashboard?) then (Dashboard)
+    :Lihat Dashboard Terbatas;
+  else (Profil)
+    :Edit Profil;
+  endif
+endif
+:Logout;
+:Session Berakhir;
+end
+@enduml

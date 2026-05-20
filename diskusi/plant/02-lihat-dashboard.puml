@@ -1,0 +1,26 @@
+@startuml
+|Pengguna|
+start
+:Klik Dashboard;
+|Sistem|
+:Load Data Default (Bulan Ini);
+:Query Stok Telur Real-Time;
+:Query Summary Penjualan;
+:Query Ringkasan Produksi;
+:Render Dashboard;
+|Pengguna|
+:Lihat Ringkasan Data;
+:Pilih Filter Periode;
+if (Ubah Filter?) then (Ya)
+  :Pilih Periode;
+  :Klik Apply Filter;
+  |Sistem|
+  :Update Data sesuai Filter;
+  :Render Dashboard Baru;
+  |Pengguna|
+  :Lihat Data Terupdate;
+else (Tidak)
+  :Selesai;
+endif
+end
+@enduml

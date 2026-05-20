@@ -1,0 +1,175 @@
+<mxfile host="65bd71144e">
+    <diagram id="hans-jaya-poultry-class-diagram" name="Hans Jaya Poultry Class Diagram">
+        <mxGraphModel dx="864" dy="1188" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1400" background="#ffffff" math="0" shadow="1">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Hans Jaya Poultry System - Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="10" width="600" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-class" value="User" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E8F5E9;strokeWidth=2;strokeColor=#2E7D32;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="80" width="220" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-attr" value="- id: int&#xa;- name: string&#xa;- email: string&#xa;- password: string&#xa;- kandang_id: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="user-class" vertex="1">
+                    <mxGeometry y="26" width="220" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="user-class" vertex="1">
+                    <mxGeometry y="116" width="220" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-meth" value="+ getKandang()&#xa;+ getProduksi()&#xa;+ getPenjualan()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="user-class" vertex="1">
+                    <mxGeometry y="124" width="220" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandang-class" value="Kandang" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E8F5E9;strokeWidth=2;strokeColor=#2E7D32;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="80" width="240" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandang-attr" value="- id: int&#xa;- nama_kandang: string&#xa;- jumlah_ayam: int&#xa;- status: enum[aktif|nonaktif]&#xa;- pic_id: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="kandang-class" vertex="1">
+                    <mxGeometry y="26" width="240" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandang-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="kandang-class" vertex="1">
+                    <mxGeometry y="116" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandang-meth" value="+ getProduksi()&#xa;+ getStokTerkini()&#xa;+ getKapasitas()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="kandang-class" vertex="1">
+                    <mxGeometry y="124" width="240" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi-class" value="ProduksiTelur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E8F5E9;strokeWidth=2;strokeColor=#2E7D32;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="80" width="260" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi-attr" value="- id: int&#xa;- kandang_id: int (FK)&#xa;- user_id: int (FK)&#xa;- tanggal_produksi: date&#xa;- jumlah_butir: int&#xa;- HDP, HHP, mortality" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="produksi-class" vertex="1">
+                    <mxGeometry y="26" width="260" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="produksi-class" vertex="1">
+                    <mxGeometry y="116" width="260" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi-meth" value="+ konversiKeButir()&#xa;+ konversiKeKg()&#xa;+ getMetrics()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="produksi-class" vertex="1">
+                    <mxGeometry y="124" width="260" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga-class" value="HargaTelur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FCE4EC;strokeWidth=2;strokeColor=#C2185B;" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="80" width="260" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga-attr" value="- id: int&#xa;- jenis_harga: enum&#xa;- harga_per_kg: decimal&#xa;- harga_per_butir: decimal&#xa;- status: enum[aktif|hangus]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="harga-class" vertex="1">
+                    <mxGeometry y="26" width="260" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="harga-class" vertex="1">
+                    <mxGeometry y="116" width="260" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga-meth" value="+ isAktif()&#xa;+ getHargaSaatIni()&#xa;+ hangusHargaLama()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="harga-class" vertex="1">
+                    <mxGeometry y="124" width="260" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan-class" value="Penjualan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E3F2FD;strokeWidth=2;strokeColor=#1565C0;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="350" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan-attr" value="- id: int&#xa;- user_id: int (FK)&#xa;- tanggal_jual: date&#xa;- nama_pembeli: string&#xa;- total_harga: decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="penjualan-class" vertex="1">
+                    <mxGeometry y="26" width="240" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="penjualan-class" vertex="1">
+                    <mxGeometry y="112" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan-meth" value="+ getDetail()&#xa;+ hitungTotal()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="penjualan-class" vertex="1">
+                    <mxGeometry y="120" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail-class" value="«immutable»&#xa;DetailPenjualan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=38;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FFF3E0;strokeWidth=2;strokeColor=#E65100;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="350" width="280" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail-attr" value="- id: int&#xa;- penjualan_id: int (FK)&#xa;- harga_telur_id: int (FK)&#xa;- jumlah_jual: decimal&#xa;- harga_satuan: decimal&#xa;- subtotal: decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="detail-class" vertex="1">
+                    <mxGeometry y="38" width="280" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="detail-class" vertex="1">
+                    <mxGeometry y="124" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail-meth" value="+ hitungSubtotal()&#xa;+ getAuditTrail()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="detail-class" vertex="1">
+                    <mxGeometry y="132" width="280" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok-class" value="StokTelur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F3E5F5;strokeWidth=2;strokeColor:#512DA8;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="620" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok-attr" value="- id: int&#xa;- stok_butir: int&#xa;- stok_kg: decimal&#xa;- updated_at: timestamp&#xa;// Calculated: Prod - Sales" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="stok-class" vertex="1">
+                    <mxGeometry y="26" width="240" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="stok-class" vertex="1">
+                    <mxGeometry y="112" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok-meth" value="+ hitungStok()&#xa;+ isStokCukup()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="stok-class" vertex="1">
+                    <mxGeometry y="120" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan-class" value="Pengaturan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F3E5F5;strokeWidth=2;strokeColor:#512DA8;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="620" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan-attr" value="- id: int&#xa;- kunci: string (unique)&#xa;- nilai: string&#xa;- tipe_data: enum&#xa;- keterangan: text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="pengaturan-class" vertex="1">
+                    <mxGeometry y="26" width="240" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="pengaturan-class" vertex="1">
+                    <mxGeometry y="112" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan-meth" value="+ get(key)&#xa;+ set(key, value)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="pengaturan-class" vertex="1">
+                    <mxGeometry y="120" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="service-class" value="«service»&#xa;StockService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E0F2F1;strokeWidth=2;strokeColor=#00695C;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="880" width="280" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="service-attr" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="service-class" vertex="1">
+                    <mxGeometry y="40" width="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="service-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;labelBackgroundColor=none;points=[];" parent="service-class" vertex="1">
+                    <mxGeometry y="40" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="service-meth" value="+ calculateStock(): decimal&#xa;+ updateStokAfterSales(id): void&#xa;+ getStokPerKandang(id): StokTelur&#xa;+ validateStokCukup(detail): boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" parent="service-class" vertex="1">
+                    <mxGeometry y="48" width="280" height="92" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-user-kandang" value="assign" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" parent="1" source="user-class" target="kandang-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-kandang-produksi" value="has many" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" parent="1" source="kandang-class" target="produksi-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-user-penjualan" value="create" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=0.3;exitY=1;entryX=0.3;entryY=0;curved=1;fontSize=11;" parent="1" source="user-class" target="penjualan-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-user-harga" value="set price" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=0.7;exitY=1;entryX=0.7;entryY=0;curved=1;fontSize=11;" parent="1" source="user-class" target="harga-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-penjualan-detail" value="contains" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" parent="1" source="penjualan-class" target="detail-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-harga-detail" value="snapshot in" style="endArrow=ERoneToMany;startArrow=none;endFill=0;startFill=0;endSize=8;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;fontSize=11;" parent="1" source="harga-class" target="detail-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-kandang-stok" value="tracks" style="endArrow=open;startArrow=none;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endSize=8;fontSize=11;" parent="1" source="kandang-class" target="stok-class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="520" y="260" as="sourcePoint"/>
+                        <mxPoint x="360" y="620" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="rel-produksi-service" value="feeds" style="endArrow=open;startArrow=none;html=1;exitX=0.5;exitY=1;entryX=0.2;entryY=0;endSize=8;curved=1;fontSize=11;dashed=1;" parent="1" source="produksi-class" target="service-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-detail-service" value="updates via" style="endArrow=open;startArrow=none;html=1;exitX=0.5;exitY=1;entryX=0.8;entryY=0;endSize=8;curved=1;fontSize=11;dashed=1;" parent="1" source="detail-class" target="service-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-service-stok" value="updates" style="endArrow=open;startArrow=none;html=1;exitX=0.3;exitY=0;entryX=0.5;entryY=1;endSize=8;curved=1;fontSize=11;" parent="1" source="service-class" target="stok-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="rel-pengaturan-service" value="reads config" style="endArrow=open;startArrow=none;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endSize=8;fontSize=11;" parent="1" source="pengaturan-class" target="service-class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-title" value="LEGEND" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1080" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-1" value="Green: Core Entities" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="1105" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-2" value="Blue: Transactions" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="1105" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-3" value="Orange: Immutable" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="1105" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-4" value="Purple: Support" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=#F3E5F5;strokeColor=#512DA8;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="1105" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-5" value="Teal: Service" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="1105" width="150" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

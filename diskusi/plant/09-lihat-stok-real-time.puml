@@ -1,0 +1,30 @@
+@startuml
+|Pengguna|
+start
+:Buka Dashboard/Halaman Stok;
+|Sistem|
+:Mulai Kalkulasi Stok Real-Time;
+:Query Opening Stok;
+:Query Total Produksi Periode Ini;
+:Query Total Penjualan Periode Ini;
+:Calculate: Stok = Opening + Produksi - Penjualan;
+:Convert ke Satuan Butir & KG;
+:Format Display;
+|Pengguna|
+:Lihat Stok Terkini;
+:Lihat Satuan Butir;
+:Lihat Satuan KG;
+:Lihat Last Updated Time;
+|Sistem|
+:Monitor Perubahan Data;
+if (Ada Input Produksi Baru?) then (Ya)
+  :Recalculate Stok;
+  :Update Display Real-Time;
+else if (Ada Penjualan Baru?) then (Ya)
+  :Recalculate Stok;
+  :Update Display Real-Time;
+else (Tidak Ada Perubahan)
+  :Status Tetap;
+endif
+end
+@enduml

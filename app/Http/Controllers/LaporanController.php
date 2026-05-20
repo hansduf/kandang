@@ -39,7 +39,7 @@ class LaporanController extends Controller
             $startDate = $endDate->copy()->subMonths(1)->startOfDay();
         }
 
-        // Query base produksi
+        // OPTIMIZED: Use pagination to avoid loading too much data
         $query = ProduksiTelur::with('kandang', 'user')
             ->whereBetween('tanggal_produksi', [$startDate, $endDate]);
 
@@ -47,51 +47,60 @@ class LaporanController extends Controller
             $query->where('kandang_id', $kandang_id);
         }
 
-        $data = $query->orderBy('tanggal_produksi', 'desc')->get();
+        $data = $query->orderBy('tanggal_produksi', 'desc')->paginate(50);
 
-        // Summary
-        $totalButir = $data->sum('jumlah_butir');
-        $totalKg = $data->sum('jumlah_kg');
-        $avgHDP = $data->avg('hdp') ?? 0;
-        $avgHHP = $data->avg('hhp') ?? 0;
-        $avgMortality = $data->avg('mortality') ?? 0;
-
-        // Chart data - Perbandingan semua kandang
-        $chartDataComparison = $this->prepareComparisonChart($startDate, $endDate);
+        // OPTIMIZED: Use database-level aggregation instead of loading all data
+        $aggregateQuery = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate]);
+        if ($kandang_id) {
+            $aggregateQuery->where('kandang_id', $kandang_id);
+        }
+        
+        $aggregate = $aggregateQuery->selectRaw('SUM(jumlah_butir) as totalButir, SUM(jumlah_kg) as totalKg, AVG(hdp) as avgHDP, AVG(hhp) as avgHHP, AVG(mortality) as avgMortality')
+            ->first();
+        
+        $totalButir = $aggregate->totalButir ?? 0;
+        $totalKg = $aggregate->totalKg ?? 0;
+        $avgHDP = $aggregate->avgHDP ?? 0;
+        $avgHHP = $aggregate->avgHHP ?? 0;
+        $avgMortality = $aggregate->avgMortality ?? 0;
 
         // Chart data detail - Multi-metric utama
         $chartDataUtama = $this->prepareDetailChart($startDate, $endDate, $kandang_id);
 
-        // Per-kandang chart data
+        // OPTIMIZED: Load all kandang and their aggregated data in a SINGLE query
         $kandangs = Kandang::where('status', 'aktif')->get();
+        
+        $allKandangData = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->groupBy('kandang_id')
+            ->selectRaw('kandang_id, SUM(jumlah_butir) as total_butir, SUM(jumlah_kg) as total_kg, 
+                        AVG(hdp) as avg_hdp, AVG(hhp) as avg_hhp, AVG(mortality) as avg_mortality, 
+                        SUM(ayam_mati) as total_ayam_mati, COUNT(*) as hari_pencatatan')
+            ->get()
+            ->keyBy('kandang_id');
+
         $perKandangCharts = [];
         foreach ($kandangs as $kandang) {
             $perKandangCharts[$kandang->id] = $this->prepareDetailChart($startDate, $endDate, $kandang->id);
         }
 
-        // KPI Per Kandang (sesuai periode filter)
-        $kpiPerKandang = Kandang::where('status', 'aktif')
-            ->with(['produksiTelur' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('tanggal_produksi', [$startDate, $endDate]);
-            }])
-            ->get()
-            ->map(function ($kandang) {
-                $produksi = $kandang->produksiTelur;
-                return [
-                    'id' => $kandang->id,
-                    'nama_kandang' => $kandang->nama_kandang,
-                    'jumlah_ayam' => $kandang->jumlah_ayam,
-                    'total_produksi_butir' => $produksi->sum('jumlah_butir'),
-                    'total_produksi_kg' => $produksi->sum('jumlah_kg'),
-                    'rata_rata_hdp' => $produksi->count() > 0 ? round($produksi->avg('hdp'), 2) : 0,
-                    'rata_rata_hhp' => $produksi->count() > 0 ? round($produksi->avg('hhp'), 2) : 0,
-                    'rata_rata_mortality' => $produksi->count() > 0 ? round($produksi->avg('mortality'), 2) : 0,
-                    'total_ayam_mati' => $produksi->sum('ayam_mati'),
-                    'hari_pencatatan' => $produksi->count(),
-                ];
-            });
+        // OPTIMIZED: Use pre-calculated aggregated data
+        $kpiPerKandang = $kandangs->map(function ($kandang) use ($allKandangData) {
+            $data = $allKandangData[$kandang->id] ?? null;
+            return [
+                'id' => $kandang->id,
+                'nama_kandang' => $kandang->nama_kandang,
+                'jumlah_ayam' => $kandang->jumlah_ayam,
+                'total_produksi_butir' => $data->total_butir ?? 0,
+                'total_produksi_kg' => $data->total_kg ?? 0,
+                'rata_rata_hdp' => $data ? round($data->avg_hdp, 2) : 0,
+                'rata_rata_hhp' => $data ? round($data->avg_hhp, 2) : 0,
+                'rata_rata_mortality' => $data ? round($data->avg_mortality, 2) : 0,
+                'total_ayam_mati' => $data->total_ayam_mati ?? 0,
+                'hari_pencatatan' => $data->hari_pencatatan ?? 0,
+            ];
+        });
 
-        return view('laporan.produksi', compact('data', 'totalButir', 'totalKg', 'kandangs', 'bulan', 'tahun', 'periode', 'chartDataUtama', 'chartDataComparison', 'perKandangCharts', 'avgHDP', 'avgHHP', 'avgMortality', 'kpiPerKandang'));
+        return view('laporan.produksi', compact('data', 'totalButir', 'totalKg', 'kandangs', 'bulan', 'tahun', 'periode', 'chartDataUtama', 'perKandangCharts', 'avgHDP', 'avgHHP', 'avgMortality', 'kpiPerKandang'));
     }
 
     private function prepareDetailChart($startDate, $endDate, $kandang_id = null)
@@ -165,56 +174,6 @@ class LaporanController extends Controller
                     'type' => 'bar',
                 ],
             ]
-        ];
-    }
-
-    private function prepareComparisonChart($startDate, $endDate)
-    {
-        $kandangs = Kandang::where('status', 'aktif')->get();
-        $labels = [];
-        $datasets = [];
-
-        // Get date labels
-        $dateRange = ProduksiTelur::selectRaw('DISTINCT DATE(tanggal_produksi) as tgl')
-            ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-            ->orderByRaw("DATE(tanggal_produksi)")
-            ->get();
-
-        $labels = $dateRange->map(fn($d) => \Carbon\Carbon::parse($d->tgl)->format('d-m'))->toArray();
-
-        // Colors for each kandang
-        $colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-
-        foreach ($kandangs as $idx => $kandang) {
-            $data = ProduksiTelur::selectRaw('DATE(tanggal_produksi) as tgl, SUM(jumlah_butir) as total')
-                ->where('kandang_id', $kandang->id)
-                ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-                ->groupByRaw("DATE(tanggal_produksi)")
-                ->orderByRaw("DATE(tanggal_produksi)")
-                ->get();
-
-            // Create array with all dates, fill with 0 if no data
-            $dataArray = [];
-            foreach ($dateRange as $date) {
-                $dayData = $data->firstWhere('tgl', $date->tgl);
-                $dataArray[] = $dayData ? $dayData->total : 0;
-            }
-
-            $datasets[] = [
-                'label' => $kandang->nama_kandang,
-                'data' => $dataArray,
-                'borderColor' => $colors[$idx % count($colors)],
-                'backgroundColor' => 'transparent',
-                'borderWidth' => 2.5,
-                'fill' => false,
-                'tension' => 0.4,
-                'pointRadius' => 3,
-            ];
-        }
-
-        return [
-            'labels' => $labels,
-            'datasets' => $datasets,
         ];
     }
 

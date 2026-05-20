@@ -102,38 +102,32 @@
                         </span>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <div class="grid grid-cols-6 gap-3">
+                        <div class="col-span-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
                             <p class="text-blue-600 text-sm font-medium">Kapasitas Kandang</p>
                             <p class="text-2xl font-bold text-blue-900 mt-2">{{ number_format($k->jumlah_ayam) }}</p>
                             <p class="text-gray-600 text-xs mt-1">ekor (base)</p>
                         </div>
                         
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                            <p class="text-green-600 text-sm font-medium">Ayam Aktual Sekarang</p>
+                        <div class="col-span-2 bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border border-green-200">
+                            <p class="text-green-600 text-sm font-medium">Ayam Aktual</p>
                             <p class="text-2xl font-bold text-green-900 mt-2">{{ number_format($kandangData[$k->id]['ayam_aktual_sekarang']) }}</p>
                             <p class="text-gray-600 text-xs mt-1">ekor</p>
                         </div>
-                        
-                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
-                            <p class="text-emerald-600 text-sm font-medium">Ayam Aktual Awal</p>
-                            <p class="text-2xl font-bold text-emerald-900 mt-2">{{ number_format($kandangData[$k->id]['ayam_aktual_awal']) }}</p>
-                            <p class="text-gray-600 text-xs mt-1">ekor</p>
-                        </div>
 
-                        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+                        <div class="col-span-2 bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-3 border border-red-200">
                             <p class="text-red-600 text-sm font-medium">Kematian (Periode)</p>
                             <p class="text-2xl font-bold text-red-900 mt-2">{{ number_format($kandangData[$k->id]['total_ayam_mati']) }}</p>
                             <p class="text-gray-600 text-xs mt-1">ekor</p>
                         </div>
 
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <div class="col-span-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3 border border-purple-200">
                             <p class="text-purple-600 text-sm font-medium">Produksi (Periode)</p>
                             <p class="text-2xl font-bold text-purple-900 mt-2">{{ number_format($kandangData[$k->id]['produksi_total'], 0, ',', '.') }}</p>
                             <p class="text-gray-600 text-xs mt-1">butir</p>
                         </div>
 
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                        <div class="col-span-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3 border border-orange-200">
                             <p class="text-orange-600 text-sm font-medium">Avg HDP</p>
                             <p class="text-2xl font-bold text-orange-900 mt-2">{{ number_format($kandangData[$k->id]['rata_rata_hdp'], 1) }}%</p>
                             <p class="text-gray-600 text-xs mt-1">efisiensi</p>

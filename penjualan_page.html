@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="z1VDTlqwM2u5C6woH8HUX7dHk4ogOeQTM2YVnL6H">
+
+        <title>Laravel</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+        <!-- Scripts -->
+        <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css" /><script type="module" src="http://[::1]:5173/resources/js/app.js"></script>    </head>
+    <body class="font-sans text-gray-900 antialiased">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-50">
+            <!-- Header Title and Logo -->
+            <div class="text-center mb-6">
+                <a href="/" class="inline-flex items-center justify-center gap-3 hover:opacity-80 transition-opacity">
+                    <span class="text-5xl">🐔</span>
+                    <h1 class="font-bold text-3xl text-gray-900">Hans Jaya Poultry</h1>
+                </a>
+            </div>
+
+            <!-- Main Content Container WIDER (max-w-lg) -->
+            <div class="w-full sm:max-w-lg mt-2 px-8 py-6 bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-100">
+                <!-- Session Status -->
+    
+    <div class="text-center mb-6">
+        <h2 class="text-base font-medium text-gray-600">Masuk ke Sistem Manajemen</h2>
+        <p class="text-xs text-gray-500 mt-1">Produksi dan Penjualan Telur</p>
+    </div>
+
+    <!-- Login Form directly in the layout slot -->
+    <form method="POST" action="http://127.0.0.1:8000/login" class="space-y-5">
+        <input type="hidden" name="_token" value="z1VDTlqwM2u5C6woH8HUX7dHk4ogOeQTM2YVnL6H" autocomplete="off">
+        <!-- Email/Username Address -->
+        <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email atau Username</label>
+            <input id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3 sm:text-sm" 
+                type="text" name="email" :value="old('email')" required autofocus />
+                    </div>
+
+        <!-- Password -->
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
+            <input id="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3 sm:text-sm"
+                type="password" name="password" required autocomplete="current-password" />
+                    </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="flex items-center justify-between">
+            <label for="remember_me" class="inline-flex items-center">
+                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500" name="remember">
+                <span class="ms-2 text-sm text-gray-600">Ingat saya</span>
+            </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 font-medium transition duration-200 mt-2">
+            Masuk
+        </button>
+    </form>
+
+    <!-- Demo Accounts Info (Compact Grid) -->
+    <div class="mt-6 bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+        <p class="text-xs font-semibold text-blue-900 mb-3 flex items-center">
+            <i class="fas fa-info-circle text-blue-600 mr-1.5"></i> Test Accounts
+        </p>
+        
+        <div class="grid grid-cols-2 gap-3">
+            <!-- Pemilik Card -->
+            <div class="bg-white rounded-md p-2.5 border border-blue-100 shadow-sm">
+                <div class="text-xs font-semibold text-blue-700 mb-1 truncate">
+                    <i class="fas fa-crown text-yellow-500 w-4"></i>Pemilik
+                </div>
+                <div class="text-[11px] text-gray-600 leading-relaxed">
+                    u: <span class="font-mono font-medium text-gray-900">pemilik</span><br>
+                    p: <span class="font-mono font-medium text-gray-900">password</span>
+                </div>
+            </div>
+
+            <!-- Kandang 1 Card -->
+            <div class="bg-white rounded-md p-2.5 border border-orange-100 shadow-sm">
+                <div class="text-xs font-semibold text-orange-700 mb-1 truncate">
+                    <i class="fas fa-egg text-orange-500 w-4"></i>Kandang 1
+                </div>
+                <div class="text-[11px] text-gray-600 leading-relaxed">
+                    u: <span class="font-mono font-medium text-gray-900">kandang1</span><br>
+                    p: <span class="font-mono font-medium text-gray-900">password</span>
+                </div>
+            </div>
+
+            <!-- Kandang 2 Card -->
+            <div class="bg-white rounded-md p-2.5 border border-orange-100 shadow-sm">
+                <div class="text-xs font-semibold text-orange-700 mb-1 truncate">
+                    <i class="fas fa-egg text-orange-500 w-4"></i>Kandang 2
+                </div>
+                <div class="text-[11px] text-gray-600 leading-relaxed">
+                    u: <span class="font-mono font-medium text-gray-900">kandang2</span><br>
+                    p: <span class="font-mono font-medium text-gray-900">password</span>
+                </div>
+            </div>
+
+            <!-- Kandang 3 Card -->
+            <div class="bg-white rounded-md p-2.5 border border-orange-100 shadow-sm">
+                <div class="text-xs font-semibold text-orange-700 mb-1 truncate">
+                    <i class="fas fa-egg text-orange-500 w-4"></i>Kandang 3
+                </div>
+                <div class="text-[11px] text-gray-600 leading-relaxed">
+                    u: <span class="font-mono font-medium text-gray-900">kandang3</span><br>
+                    p: <span class="font-mono font-medium text-gray-900">password</span>
+                </div>
+            </div>
+        </div>
+    </div>
+            </div>
+            
+            <!-- Footer Info -->
+            <div class="mt-8 text-center">
+                <p class="text-xs text-gray-500">
+                    © 2026 Hans Jaya Poultry.
+                </p>
+            </div>
+        </div>
+    </body>
+</html>

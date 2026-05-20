@@ -1,0 +1,140 @@
+@startuml HansJayaPoultryERD
+!define ENTITY_BGCOLOR #E8F5E9
+!define FK_BGCOLOR #FFF3E0
+!define CONFIG_BGCOLOR #F3E5F5
+
+entity "users" as users {
+  *id : int <<PK>>
+  --
+  name : string
+  email : string
+  password : string
+  kandang_id : int <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "kandangs" as kandangs {
+  *id : int <<PK>>
+  --
+  nama_kandang : string
+  jumlah_ayam : int
+  keterangan : text
+  status : enum[aktif|nonaktif]
+  pic_id : int <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "produksi_telur" as produksi {
+  *id : int <<PK>>
+  --
+  kandang_id : int <<FK>>
+  user_id : int <<FK>>
+  tanggal_produksi : date
+  satuan_input : enum[butir|kg]
+  jumlah_input : decimal
+  jumlah_butir : int
+  jumlah_kg : decimal
+  HDP : decimal
+  HHP : decimal
+  mortality : decimal
+  keterangan : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "harga_telur" as harga {
+  *id : int <<PK>>
+  --
+  jenis_harga : enum[kandang|grosir|konsumen]
+  harga_per_kg : decimal
+  harga_per_butir : decimal
+  tanggal_berlaku : date
+  user_id : int <<FK>>
+  status : enum[aktif|hangus]
+  keterangan : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "penjualan" as penjualan {
+  *id : int <<PK>>
+  --
+  user_id : int <<FK>>
+  tanggal_jual : date
+  nama_pembeli : string
+  total_harga : decimal
+  keterangan : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "detail_penjualan" as detail {
+  *id : int <<PK>>
+  --
+  penjualan_id : int <<FK>>
+  harga_telur_id : int <<FK>>
+  satuan_jual : enum[butir|kg]
+  jumlah_jual : decimal
+  jumlah_butir : int
+  jumlah_kg : decimal
+  harga_satuan : decimal
+  subtotal : decimal
+  jam_penjualan : time
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "stok_telur" as stok {
+  *id : int <<PK>>
+  --
+  stok_butir : int
+  stok_kg : decimal
+  updated_at : timestamp
+}
+
+entity "pengaturan" as pengaturan {
+  *id : int <<PK>>
+  --
+  kunci : string (unique)
+  nilai : string
+  tipe_data : enum[string|integer|decimal|boolean]
+  keterangan : text
+  updated_at : timestamp
+}
+
+' Relationships
+users ||--o{ kandangs : "assign to"
+users ||--o{ produksi : "input"
+users ||--o{ penjualan : "create"
+users ||--o{ harga : "set price"
+
+kandangs ||--o{ produksi : "has many"
+kandangs ||--|| stok : "tracks"
+
+kandangs }o--|| users : "pic_id"
+
+penjualan ||--o{ detail : "contains"
+
+harga ||--o{ detail : "snapshot in"
+
+note right of produksi
+  Immutable once created
+  Contains audit trail
+  Health metrics tracked
+end note
+
+note right of detail
+  Immutable - no update allowed
+  Price snapshot at sale time
+  Ensures audit compliance
+end note
+
+note right of stok
+  Calculated: Production - Sales
+  Not manually updated
+  Real-time computation
+end note
+
+@enduml

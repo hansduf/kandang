@@ -69,40 +69,49 @@ class KandangController extends Controller
             $kandangChartMati[$k->id] = $matiData;
         }
 
-        // Load summary stats for each kandang - based on selected period
+        // Load summary stats for each kandang - optimized with single query
+        $kandangStats = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->selectRaw('kandang_id, 
+                         SUM(jumlah_butir) as produksi_total, 
+                         SUM(jumlah_kg) as produksi_kg, 
+                         AVG(hdp) as rata_rata_hdp, 
+                         AVG(hhp) as rata_rata_hhp, 
+                         AVG(mortality) as rata_rata_mortality,
+                         SUM(ayam_mati) as total_ayam_mati_periode,
+                         MAX(tanggal_produksi) as tanggal_produksi_terakhir')
+            ->groupBy('kandang_id')
+            ->get()
+            ->keyBy('kandang_id');
+        
+        // Get all-time death stats in single query
+        $kandangAllTimeStats = ProduksiTelur::selectRaw('kandang_id, SUM(ayam_mati) as total_ayam_mati_all_time')
+            ->groupBy('kandang_id')
+            ->get()
+            ->keyBy('kandang_id');
+        
+        // Build kandang data from pre-computed stats
         $kandangData = [];
         $totalKematian = 0;
         foreach ($kandang as $k) {
-            $produksi = $k->produksiTelur()
-                ->whereBetween('tanggal_produksi', [$startDate, $endDate])
-                ->orderBy('tanggal_produksi', 'desc')
-                ->get();
-
-            $kematian = $produksi->sum('ayam_mati');
+            $stats = $kandangStats->get($k->id);
+            $allTimeStats = $kandangAllTimeStats->get($k->id);
+            
+            $kematian = $stats->total_ayam_mati_periode ?? 0;
             $totalKematian += $kematian;
-
-            // Total kematian all time (untuk menghitung ayam aktual sekarang)
-            $totalKematianAllTime = $k->produksiTelur()->sum('ayam_mati');
-
-            // Kematian sebelum periode dipilih (untuk menghitung ayam aktual awal periode)
-            $kematianSebelumPeriode = $k->produksiTelur()
-                ->where('tanggal_produksi', '<', $startDate)
-                ->sum('ayam_mati');
-
+            
+            $totalKematianAllTime = $allTimeStats->total_ayam_mati_all_time ?? 0;
             $ayamAktualSekarang = $k->jumlah_ayam - $totalKematianAllTime;
-            $ayamAktualAwal = $k->jumlah_ayam - $kematianSebelumPeriode;
 
             $kandangData[$k->id] = [
-                'produksi_total' => $produksi->sum('jumlah_butir'),
-                'produksi_kg' => $produksi->sum('jumlah_kg'),
-                'rata_rata_hdp' => $produksi->avg('hdp'),
-                'rata_rata_hhp' => $produksi->avg('hhp'),
-                'rata_rata_mortality' => $produksi->avg('mortality'),
+                'produksi_total' => $stats->produksi_total ?? 0,
+                'produksi_kg' => $stats->produksi_kg ?? 0,
+                'rata_rata_hdp' => $stats->rata_rata_hdp ?? 0,
+                'rata_rata_hhp' => $stats->rata_rata_hhp ?? 0,
+                'rata_rata_mortality' => $stats->rata_rata_mortality ?? 0,
                 'total_ayam_mati' => $kematian,
                 'total_ayam_mati_all_time' => $totalKematianAllTime,
                 'ayam_aktual_sekarang' => $ayamAktualSekarang,
-                'ayam_aktual_awal' => $ayamAktualAwal,
-                'tanggal_produksi_terakhir' => $produksi->first()->tanggal_produksi ?? null,
+                'tanggal_produksi_terakhir' => $stats->tanggal_produksi_terakhir ?? null,
             ];
         }
 

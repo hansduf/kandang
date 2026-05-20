@@ -31,7 +31,10 @@ class ProduksiTelurController extends Controller
             return $k;
         });
         
-        return view('produksi.create', compact('kandangWithCurrentCount'));
+        // Fetch konversi setting untuk frontend
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+        
+        return view('produksi.create', compact('kandangWithCurrentCount', 'konversi'));
     }
 
     public function store(Request $request)
@@ -41,7 +44,6 @@ class ProduksiTelurController extends Controller
             'satuan_input'     => 'required|in:butir,kg',
             'jumlah_input'     => 'required|numeric|min:0',
             'ayam_mati'        => 'nullable|integer|min:0',
-            'ayam_hidup'       => 'required|integer|min:0',
             'catatan'          => 'nullable|string|max:500',
         ]);
 
@@ -60,8 +62,16 @@ class ProduksiTelurController extends Controller
         // Ambil kandang untuk mendapatkan jumlah ayam awal
         $kandang = auth()->user()->kandang;
         $jumlah_ayam_awal = $kandang->jumlah_ayam;
-        $ayam_hidup = (int) $request->ayam_hidup;
         $ayam_mati = (int) ($request->ayam_mati ?? 0);
+        
+        // Calculate ayam_hidup from total deaths recorded
+        $total_ayam_mati = ProduksiTelur::where('kandang_id', $kandang->id)->sum('ayam_mati');
+        $ayam_hidup = $jumlah_ayam_awal - $total_ayam_mati - $ayam_mati;
+        
+        // Ensure ayam_hidup doesn't go negative
+        if ($ayam_hidup < 0) {
+            $ayam_hidup = 0;
+        }
 
         // Hitung metrics
         // HDP = (Jumlah telur / Jumlah ayam hidup) × 100
@@ -90,13 +100,8 @@ class ProduksiTelurController extends Controller
             'mortality'        => $mortality,
         ]);
 
-        // Update stok telur otomatis
-        $stok = StokTelur::first();
-        if ($stok) {
-            $stok->increment('stok_butir', $jumlah_butir);
-            $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
-            $stok->save();
-        }
+        // Note: Stock is now calculated dynamically via StockService,
+        // no manual updates to StokTelur table needed
 
         return redirect()->route('produksi.index')
                          ->with('success', 'Data produksi berhasil disimpan!');
@@ -122,17 +127,8 @@ class ProduksiTelurController extends Controller
     {
         $produksi = ProduksiTelur::findOrFail($id);
 
-        // Kurangi stok sesuai produksi yang dihapus
-        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
-
-        // Kurangi stok telur
-        $stok = StokTelur::first();
-        if ($stok) {
-            $stok->decrement('stok_butir', $produksi->jumlah_butir);
-            $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
-            $stok->save();
-        }
-
+        // Delete production record
+        // Note: Stock is now calculated dynamically via StockService
         $produksi->delete();
 
         return redirect()->route('produksi.index')

@@ -1,0 +1,38 @@
+@startuml
+|Pekerja|
+start
+:Klik Tambah Produksi;
+|Sistem|
+:Tampilkan Form Input Produksi;
+|Pekerja|
+:Input Tanggal Produksi;
+:Pilih Satuan (Butir/KG);
+:Input Jumlah Produksi;
+|Sistem|
+:Auto-Konversi ke Satuan Lain;
+|Pekerja|
+:Input Jumlah Ayam Hidup;
+:Input Jumlah Ayam Mati (Optional);
+:Input Catatan (Optional);
+:Klik Simpan;
+|Sistem|
+:Validasi Data;
+if (Data Valid?) then (Ya)
+  :Auto-Calculate HDP;
+  :Auto-Calculate HHP;
+  :Auto-Calculate Mortality Rate;
+  :Simpan Produksi ke DB;
+  :Update Stok Telur Real-Time;
+  :Pesan Sukses;
+else (Tidak)
+  :Tampilkan Error Message;
+  |Pekerja|
+  :Data Form Tetap Diisi;
+  if (Edit & Retry?) then (Ya)
+    :Edit Data;
+  else (Tidak)
+    :Batal;
+  endif
+endif
+end
+@enduml

@@ -31,15 +31,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            // Only drop columns that don't have complex dependencies
+            // kandang_id is handled by 2026_03_31_154024 migration, so we skip it here
             if (Schema::hasColumn('users', 'username')) {
                 $table->dropColumn('username');
             }
             if (Schema::hasColumn('users', 'role')) {
                 $table->dropColumn('role');
-            }
-            if (Schema::hasColumn('users', 'kandang_id')) {
-                $table->dropForeign(['kandang_id']);
-                $table->dropColumn('kandang_id');
             }
         });
     }

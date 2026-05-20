@@ -1,0 +1,1202 @@
+================================================================================
+SISTEM MANAJEMEN & MONITORING PRODUKSI PENJUALAN TELUR AYAM PETELUR
+DOKUMENTASI LENGKAP ALUR SISTEM PER FITUR
+================================================================================
+
+VERIFIKASI COMPLETENESS:
+
+PEKERJA KANDANG - 5 Fitur:
+✓ 1. Login
+✓ 2. Input Produksi Telur Harian
+✓ 3. Lihat Dashboard
+✓ 4. Lihat Riwayat Produksi
+✓ 5. Lihat Stok Telur
+
+PEMILIK PETERNAKAN - 7 Fitur:
+✓ 1. Login (shared)
+✓ 2. Kelola Data Kandang (CRUD)
+✓ 3. Kelola Master Harga Telur
+✓ 4. Input Penjualan Telur
+✓ 5. Lihat Dashboard (shared)
+✓ 6. Lihat Laporan Produksi
+✓ 7. Lihat Laporan Penjualan
+
+STATUS: ✓ SEMUA ALUR SUDAH TERCAKUP
+
+================================================================================
+
+FITUR 1: LOGIN
+================================================================================
+
+ALUR UMUM LOGIN SYSTEM:
+┌──────────────────────────────────────────────────────────────────┐
+│                          LOGIN FLOW                              │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  START                                                            │
+│    ↓                                                              │
+│  [Halaman login]                                                 │
+│    ↓                                                              │
+│  Input Username & Password                                       │
+│    ↓                                                              │
+│  ┌─ Validasi Kredensial ─┐                                       │
+│  │                       │                                       │
+│  │ Valid?                 Not Valid?                              │
+│  │  ↓                     ↓                                       │
+│  │  ↓                  Error: "Username/Password salah"           │
+│  │  ↓                  → Retry Login                              │
+│  │  ↓                                                             │
+│  │  Load User Role ─────────────┐                                │
+│  │          ↓                   │                                │
+│  │    ┌─────────────────┐       │                                │
+│  │    │ Role Check      │       │                                │
+│  │    └─────────────────┘       │                                │
+│  │     ↙           ↘            │                                │
+│  │  PEKERJA    PEMILIK          │                                │
+│  │    ↓           ↓             │                                │
+│  └─→ Dashboard  Dashboard       │                                │
+│      (Pekerja) (Pemilik)        │                                │
+│    ↓           ↓                │                                │
+│  END (Pekerja) END (Pemilik)    │                                │
+│                                 │                                │
+│ Error Handling:                 │                                │
+│ • Multiple failed attempts → Account Lock                        │
+│ • Wrong credentials → Show error, allow retry                    │
+│ • DB connection error → Show error message                       │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+SKENARIO DETAIL:
+
+Nama: Login
+Actor: Pekerja Kandang / Pemilik Peternakan
+Tujuan: Masuk ke sistem untuk akses fitur sesuai role
+
+PRECONDITION:
+• Sistem menampilkan halaman login
+• User belum authenticated
+
+FLOW UTAMA:
+1. User buka aplikasi → halaman login tampil
+2. User input username → system terima input
+3. User input password → system terima input
+4. User klik "Login" → system validasi di database
+5. System check: username & password valid?
+   - VALID: lanjut ke step 6
+   - TIDAK: tampilkan error "Username/Password salah" → kembali ke step 2
+6. System query user dari database → ambil role
+7. System set session/token untuk user
+8. System redirect ke dashboard sesuai role:
+   - Role "pekerja" → Pekerja Dashboard
+   - Role "pemilik" → Pemilik Dashboard
+
+POSTCONDITION:
+• User sudah authenticated
+• Session/token tersimpan
+• User akses dashboard sesuai role
+
+ERROR HANDLING:
+A1. Username/Password Salah
+    → Error message: "Username/Password salah"
+    → Allow retry (max 5 attempts)
+
+A2. Akun Terkunci (5+ failed attempts)
+    → Error message: "Akun terkunci. Hubungi administrator"
+    → Log activity untuk security
+
+A3. Database Error
+    → Error message: "Server error. Coba lagi nanti"
+    → Log error untuk debugging
+
+================================================================================
+
+FITUR 2: INPUT PRODUKSI TELUR HARIAN (PEKERJA KANDANG)
+================================================================================
+
+ALUR INPUT PRODUKSI:
+┌──────────────────────────────────────────────────────────────────┐
+│                   INPUT PRODUKSI FLOW                            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pekerja Login ✓                                                 │
+│    ↓                                                              │
+│  Klik Menu "Input Produksi"                                      │
+│    ↓                                                              │
+│  [Form Produksi Terbuka]                                         │
+│    ├─ Kandang ID: [AUTO PRE-FILL - KANDANG PEKERJA] (READ-ONLY) │
+│    ├─ Tanggal Produksi: [DATE PICKER]                            │
+│    ├─ Satuan: [RADIO: Butir / Kg]                                │
+│    ├─ Jumlah: [NUMBER INPUT]                                     │
+│    ├─ Keterangan: [TEXT AREA - OPTIONAL]                         │
+│    └─ [BUTTON SIMPAN]                                            │
+│    ↓                                                              │
+│  Pekerja isi form:                                               │
+│  • Pilih tanggal produksi                                        │
+│  • Pilih satuan (butir atau kg)                                  │
+│  • Input jumlah                                                  │
+│  • Input keterangan (opsional)                                   │
+│    ↓                                                              │
+│  Pekerja klik "Simpan"                                           │
+│    ↓                                                              │
+│  ┌─ VALIDASI ─────────┐                                          │
+│  │                    │                                          │
+│  │ • Tanggal ≤ hari ini?    │                                    │
+│  │ • Jumlah > 0?            │                                    │
+│  │ • Kandang valid?         │                                    │
+│  │                          │                                    │
+│  │ Semua valid?             │                                    │
+│  │  Valid ↓  Invalid ↓      │                                    │
+│  └────────┼────────────────┘                                     │
+│           │                 │                                    │
+│           ↓                 ↓                                    │
+│      [PROSES]           [ERROR MESSAGE]                          │
+│           │                 │                                    │
+│           ↓                 ↓                                    │
+│  1. KONVERSI SATUAN    → Tampilkan error                         │
+│     (ambil dari tabel  → Pekerja perbaiki input                  │
+│      pengaturan)       → Retry simpan                            │
+│     Jika input = butir:                                          │
+│     • jumlah_butir = input                                       │
+│     • jumlah_kg = input / 16                                     │
+│                                                                   │
+│     Jika input = kg:                                             │
+│     • jumlah_kg = input                                          │
+│     • jumlah_butir = input * 16                                  │
+│           ↓                                                      │
+│  2. SIMPAN KE DATABASE                                           │
+│     INSERT INTO produksi_telur:                                  │
+│     • kandang_id (dari session pekerja)                          │
+│     • user_id (from auth)                                        │
+│     • tanggal_produksi                                           │
+│     • satuan_input                                               │
+│     • jumlah_input                                               │
+│     • jumlah_butir (hasil konversi)                              │
+│     • jumlah_kg (hasil konversi)                                 │
+│     • keterangan                                                 │
+│     • created_at, updated_at                                     │
+│           ↓                                                      │
+│  3. UPDATE STOK OTOMATIS                                         │
+│     UPDATE stok_telur:                                           │
+│     • stok_butir += jumlah_butir (increment)                     │
+│     • stok_kg = stok_butir / 16 (recalc)                         │
+│     • updated_at = NOW()                                         │
+│           ↓                                                      │
+│  4. COMMIT TRANSACTION                                           │
+│           ↓                                                      │
+│  ✓ Success Message: "Produksi telah disimpan!"                   │
+│           ↓                                                      │
+│  Redirect ke: Lihat Riwayat Produksi                             │
+│    ↓                                                              │
+│  [Tampilkan tabel riwayat dengan data baru]                      │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+│ CONTOH KONVERSI:                                                 │
+│ Input: 100 butir → Stok tambah 100 butir = 6.25 kg              │
+│ Input: 5 kg → Stok tambah 80 butir = 5 kg                       │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+DETAIL PROSES:
+
+Nama: Input Produksi Telur Harian
+Actor: Pekerja Kandang
+Tujuan: Mencatat hasil produksi telur harian kandang mereka
+
+PRECONDITION:
+• Pekerja sudah login
+• Pekerja memiliki kandang yang terdaftar di sistem
+• Halaman input produksi sudah terbuka
+
+MAIN FLOW:
+Step  Action By        System Response
+─────────────────────────────────────────────────────────────
+1.    Pekerja klik     Tampilkan form input produksi
+      "Input Produksi"
+
+2.    -                Pre-fill kandang_id (dari session)
+                       Set read-only (pekerja tidak bisa ubah)
+
+3.    Pekerja pilih    Terima input tanggal
+      tanggal produksi
+
+4.    Pekerja pilih    Terima pilihan satuan (butir/kg)
+      satuan (butir/kg)
+
+5.    Pekerja input    Terima input angka
+      jumlah
+
+6.    Pekerja input    Terima input text (optional)
+      keterangan
+
+7.    Pekerja klik     Validasi:
+      "Simpan"         • Tanggal ≤ hari ini?
+                       • Jumlah > 0?
+                       • Kandang valid?
+                       
+8.    -                IF valid → lanjut step 9
+                       IF tidak → tampilkan error
+
+9.    -                Konversi satuan:
+                       IF satuan_input = 'butir'
+                         jumlah_butir = input
+                         jumlah_kg = input / 16
+                       ELSE
+                         jumlah_kg = input  
+                         jumlah_butir = input * 16
+
+10.   -                INSERT produksi_telur ke database
+                       Catat: kandang_id, user_id, 
+                       tanggal, satuan, jumlah,
+                       jumlah_butir, jumlah_kg, keterangan
+
+11.   -                UPDATE stok_telur:
+                       stok_butir += jumlah_butir
+                       stok_kg = stok_butir / 16
+                       updated_at = NOW()
+
+12.   -                Tampilkan success message
+                       Redirect ke halaman riwayat produksi
+
+POSTCONDITION:
+• Data produksi tersimpan di database
+• Stok telur otomatis bertambah
+• Pekerja melihat riwayat produksi terbaru
+
+ERROR & EXCEPTION:
+E1. Tanggal lebih besar dari hari ini:
+    Message: "Tanggal tidak boleh di masa depan"
+    Action: Pekerja pilih ulang tanggal
+
+E2. Jumlah 0 atau negatif:
+    Message: "Jumlah harus lebih dari 0"
+    Action: Pekerja input angka yang valid
+
+E3. Kandang tidak valid (security check):
+    Message: "Kandang tidak ditemukan"
+    Action: Log security, contact admin
+
+E4. Database error:
+    Message: "Gagal menyimpan data. Coba lagi"
+    Action: Retry atau contact admin
+
+================================================================================
+
+FITUR 3: LIHAT DASHBOARD (PEKERJA & PEMILIK)
+================================================================================
+
+ALUR DASHBOARD:
+┌──────────────────────────────────────────────────────────────────┐
+│                    DASHBOARD FLOW                                │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  User Login (Pekerja/Pemilik)                                    │
+│    ↓                                                              │
+│  Klik Menu "Dashboard"                                           │
+│    ↓                                                              │
+│  ┌─ PAGE LOAD ────────────────────────────┐                      │
+│  │                                        │                      │
+│  │ 1. Query stok_telur → stok terkini    │                      │
+│  │    SELECT * FROM stok_telur LIMIT 1   │                      │
+│  │                                        │                      │
+│  │ 2. Query produksi hari ini            │                      │
+│  │    SELECT SUM(jumlah_butir)            │                      │
+│  │    FROM produksi_telur                 │                      │
+│  │    WHERE DATE(tanggal_produksi) = TODAY()                     │
+│  │                                        │                      │
+│  │ 3. Query penjualan bulan ini          │                      │
+│  │    SELECT SUM(total_harga)             │                      │
+│  │    FROM penjualan                      │                      │
+│  │    WHERE MONTH/YEAR = bulan saat ini   │                      │
+│  │                                        │                      │
+│  │ 4. Query kandang aktif                │                      │
+│  │    SELECT COUNT(*)                     │                      │
+│  │    FROM kandang                        │                      │
+│  │    WHERE status = 'aktif'              │                      │
+│  │                                        │                      │
+│  │ 5. Query produksi 7 hari                │                      │
+│  │    SELECT DATE(...), SUM(jumlah_butir) │                      │
+│  │    FROM produksi_telur                 │                      │
+│  │    WHERE tanggal_produksi BETWEEN      │                      │
+│  │          (TODAY - 6) AND TODAY         │                      │
+│  │    GROUP BY DATE                       │                      │
+│  │                                        │                      │
+│  └────────────────────────────────────────┘                      │
+│    ↓                                                              │
+│  [Render Dashboard]                                              │
+│                                                                   │
+│  ┌──────────────┬──────────────┐                                 │
+│  │ Card 1:      │ Card 2:      │                                 │
+│  │ STOK TELUR   │ PRODUKSI     │                                 │
+│  │              │ HARI INI     │                                 │
+│  │ X butir      │              │                                 │
+│  │ Y kg         │ Z butir      │                                 │
+│  └──────────────┴──────────────┘                                 │
+│                                                                   │
+│  ┌──────────────┬──────────────┐                                 │
+│  │ Card 3:      │ Card 4:      │                                 │
+│  │ PENJUALAN    │ KANDANG      │                                 │
+│  │ BULAN INI    │ AKTIF        │                                 │
+│  │              │              │                                 │
+│  │ Rp A         │ B            │                                 │
+│  └──────────────┴──────────────┘                                 │
+│                                                                   │
+│  [Grafik 7 Hari Terakhir]                                        │
+│  Bar Chart: Produksi harian (butir)                              │
+│                                                                   │
+│  Mon   │█                                                         │
+│  Tue   │██                                                        │
+│  Wed   │███                                                       │
+│  Thu   │█████                                                     │
+│  Fri   │████                                                      │
+│  Sat   │██████                                                    │
+│  Sun   │█                                                         │
+│                                                                   │
+│    ↓                                                              │
+│  User melihat ringkasan data                                     │
+│    ↓                                                              │
+│  User bisa klik untuk drill-down:                                │
+│  • Klik card → buka halaman detail                               │
+│  • Klik grafik → buka laporan lengkap                            │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+PERBEDAAN DASHBOARD:
+
+PEKERJA KANDANG LIHAT:
+• Stok Telur (umum)
+• Produksi Hari Ini (umum)
+• Riwayat Produksi Kandang Mereka
+• Basic Grafik (data terbatas)
+• TIDAK bisa: Lihat penjualan, analytics detail
+
+PEMILIK PETERNAKAN LIHAT:
+• Stok Telur (detail)
+• Produksi Hari Ini (semua kandang)
+• Penjualan Bulan Ini (detail)
+• Kandang Aktif (jumlah)
+• Detail Grafik (7 hari, per kandang, dll)
+• Quick Links ke: Laporan, Settings, dll
+
+================================================================================
+
+FITUR 4: LIHAT RIWAYAT PRODUKSI (PEKERJA & PEMILIK)
+================================================================================
+
+ALUR RIWAYAT PRODUKSI:
+┌──────────────────────────────────────────────────────────────────┐
+│                 RIWAYAT PRODUKSI FLOW                            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  User klik "Lihat Riwayat Produksi"                              │
+│    ↓                                                              │
+│  ┌─ Query Database ────────────────┐                             │
+│  │                                 │                             │
+│  │ PEKERJA:                         │                             │
+│  │ SELECT * FROM produksi_telur    │                             │
+│  │ WHERE user_id = current_user    │                             │
+│  │       AND kandang_id = current_kandang                        │
+│  │ ORDER BY tanggal_produksi DESC  │                             │
+│  │                                 │                             │
+│  │ PEMILIK:                         │                             │
+│  │ SELECT * FROM produksi_telur    │                             │
+│  │ ORDER BY tanggal_produksi DESC  │                             │
+│  │ LIMIT 50                        │                             │
+│  │                                 │                             │
+│  └─────────────────────────────────┘                             │
+│    ↓                                                              │
+│  [Tampilkan Tabel Riwayat]                                       │
+│                                                                   │
+│  Header Tabel:                                                   │
+│  ┌─────┬──────────┬──────────┬────────┬────────┬─────────┐      │
+│  │ No  │ Tanggal  │ Kandang  │ Satuan │ Jumlah │ Konversi│      │
+│  │     │          │          │        │        │         │      │
+│  │ 1   │ 2026-04-07 K-A      │ butir  │ 100    │ 6.25kg  │      │
+│  │ 2   │ 2026-04-06 K-A      │ kg     │ 5      │ 80 butir│      │
+│  │ 3   │ 2026-04-05 K-A      │ butir  │ 95     │ 5.94kg  │      │
+│  │ ... │ ...      │ ...      │ ...    │ ...    │ ...     │      │
+│  └─────┴──────────┴──────────┴────────┴────────┴─────────┘      │
+│                                                                   │
+│  Paginasi (jika ada):                                            │
+│  [<] page 1 of 5 [>]                                             │
+│                                                                   │
+│  Filter (jika PEMILIK):                                          │
+│  ┌─────────────────────────────────────┐                         │
+│  │ Filter by Kandang: [Dropdown]       │                         │
+│  │ Filter by Date: [Date From] - [To]  │                         │
+│  │ [Apply Filter]                      │                         │
+│  └─────────────────────────────────────┘                         │
+│    ↓                                                              │
+│  User bisa aksi (jika PEMILIK):                                  │
+│  • Edit → Ubah data produksi                                     │
+│  • Delete → Hapus data (dengan revert stok)                      │
+│  • Export → Download tabel sebagai Excel/PDF                     │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+DETAIL AKSI EDIT/DELETE:
+
+EDIT:
+1. Pemilik klik "Edit" pada row tertentu
+2. Sistem buka form dengan data terpopulasi
+3. Pemilik ubah data (jumlah, satuan, tanggal)
+4. Sistem re-konversi satuan
+5. Sistem hitung delta stok (old - new)
+6. Sistem update stok dengan delta tsb
+7. Sistem update record produksi
+8. Success message, reload tabel
+
+DELETE:
+1. Pemilik klik "Delete" pada row
+2. Sistem tampilkan konfirmasi "Apakah Anda yakin?"
+3. Jika confirm:
+   - Sistem hitung stok yang akan dikurangi
+   - Sistem update stok_telur (decrement)
+   - Sistem delete record dari produksi_telur
+   - Sistem tampilkan success
+4. Tabel reload
+
+================================================================================
+
+FITUR 5: LIHAT STOK TELUR (PEKERJA & PEMILIK)
+================================================================================
+
+ALUR LIHAT STOK:
+┌──────────────────────────────────────────────────────────────────┐
+│                     LIHAT STOK FLOW                              │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  User klik "Lihat Stok" (dari sidebar/menu)                      │
+│    ↓                                                              │
+│  Sistem query:                                                    │
+│  SELECT stok_butir, stok_kg, updated_at                          │
+│  FROM stok_telur LIMIT 1                                         │
+│    ↓                                                              │
+│  [Render Stok Panel]                                             │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────┐             │
+│  │          STOK TELUR TERKINI (Real-time)        │             │
+│  │                                                 │             │
+│  │  Stok Butir: 2,500 butir                        │             │
+│  │  Stok Kilogram: 156.25 kg                       │             │
+│  │                                                 │             │
+│  │  Last Updated: 2026-04-07 09:45 AM             │             │
+│  │                                                 │             │
+│  │  ┌─────────────────────────────────────────┐   │             │
+│  │  │ Status: STOK AMAN                       │   │             │
+│  │  │ Threshold: > 200 butir (OK)             │   │             │
+│  │  └─────────────────────────────────────────┘   │             │
+│  │                                                 │             │
+│  │  [REFRESH BUTTON]                              │             │
+│  │  [PRINT BUTTON]                                │             │
+│  │                                                 │             │
+│  └─────────────────────────────────────────────────┘             │
+│    ↓                                                              │
+│  OPTIONAL - Riwayat Stok (PEMILIK):                              │
+│  Tabel perubahan stok (10 data terakhir)                         │
+│  Tanggal | Jenis | Qty | Saldo | Keterangan                      │
+│  2026-04-07 | Produksi  | +100  | 2500 | Input produksi          │
+│  2026-04-07 | Penjualan | -200  | 2400 | Jual ke Brand X         │
+│  ...                                                              │
+│    ↓                                                              │
+│  User bisa aksi:                                                 │
+│  • Refresh data (query realtime)                                 │
+│  • Print stok (untuk record harian)                              │
+│  • Lihat detail riwayat (pemilik)                                │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+│ ALERT LOGIC:                                                     │
+│ IF stok_butir < 200:                                             │
+│   → Tampilkan warning (YELLOW) "Stok menipis"                    │
+│ IF stok_butir = 0:                                               │
+│   → Tampilkan alert (RED) "Stok habis! Segera input produksi"   │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+================================================================================
+
+FITUR 6: KELOLA DATA KANDANG (PEMILIK PETERNAKAN)
+================================================================================
+
+ALUR KELOLA KANDANG:
+┌──────────────────────────────────────────────────────────────────┐
+│                 KELOLA KANDANG FLOW                              │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pemilik klik "Kelola Kandang"                                   │
+│    ↓                                                              │
+│  [List Kandang Page]                                             │
+│                                                                   │
+│  ┌─────────────────────────────────────────────┐                │
+│  │              DAFTAR KANDANG                 │                │
+│  │  [+ TAMBAH KANDANG BARU]                    │                │
+│  │                                             │                │
+│  │ ┌──┬────────┬──────────┬────────┬─────────┐│                │
+│  │ │No│ Nama   │ Jml Ayam │ Status │ Aksi    ││                │
+│  │ ├──┼────────┼──────────┼────────┼─────────┤│                │
+│  │ │1 │Kandang │  2000    │ Aktif  │ Edit...││                │
+│  │ │  │ A      │          │        │ Delete  ││                │
+│  │ │2 │Kandang │  1500    │ Aktif  │ Edit   ││                │
+│  │ │  │ B      │          │        │ Delete ││                │
+│  │ │3 │Kandang │     0    │Nonaktif│ Edit   ││                │
+│  │ │  │ C      │          │        │ Delete ││                │
+│  │ └──┴────────┴──────────┴────────┴─────────┘│                │
+│  └─────────────────────────────────────────────┘                │
+│    ↓                                                              │
+│  FLOW A: TAMBAH KANDANG                                          │
+│  ├─ Pemilik klik "+ Tambah Kandang"                              │
+│  │   ↓                                                            │
+│  │   [Form Input Kandang Kosong]                                │
+│  │   ├─ Nama Kandang: [TEXT INPUT]                              │
+│  │   ├─ Jumlah Ayam: [NUMBER INPUT]                             │
+│  │   ├─ Keterangan: [TEXT AREA - OPTIONAL]                      │
+│  │   ├─ Status: [RADIO: Aktif/Nonaktif] default=Aktif           │
+│  │   └─ [SIMPAN] [BATAL]                                        │
+│  │   ↓                                                            │
+│  │   Validasi:                                                   │
+│  │   • Nama kandang tidak boleh kosong                           │
+│  │   • Nama kandang tidak boleh duplikat                         │
+│  │   • Jumlah ayam harus 0 atau lebih                            │
+│  │   ↓                                                            │
+│  │   IF valid:                                                   │
+│  │   • INSERT kandang ke database                                │
+│  │   • Redirect ke Daftar Kandang                                │
+│  │   • Tampilkan success message                                 │
+│  │   ↓                                                            │
+│  │   IF tidak:                                                   │
+│  │   • Tampilkan error message                                   │
+│  │   • Focus ke field yang error                                 │
+│  │   ↓                                                            │
+│  └─ END                                                           │
+│    ↓                                                              │
+│  FLOW B: EDIT KANDANG                                            │
+│  ├─ Pemilik klik "Edit" pada kandang                             │
+│  │   ↓                                                            │
+│  │   [Form dengan data terpopulasi]                              │
+│  │   • Nama Kandang: [Kandang A]                                 │
+│  │   • Jumlah Ayam: [2000]                                       │
+│  │   • Keterangan: [existing text]                               │
+│  │   • Status: [Aktif selected]                                  │
+│  │   ↓                                                            │
+│  │   Pemilik ubah data yg diperlukan                             │
+│  │   ↓                                                            │
+│  │   Validasi (sama seperti tambah)                              │
+│  │   ↓                                                            │
+│  │   IF valid:                                                   │
+│  │   • UPDATE kandang di database                                │
+│  │   • Redirect ke Daftar Kandang                                │
+│  │   • Tampilkan success message                                 │
+│  │   ↓                                                            │
+│  └─ END                                                           │
+│    ↓                                                              │
+│  FLOW C: HAPUS KANDANG                                           │
+│  ├─ Pemilik klik "Delete" pada kandang                           │
+│  │   ↓                                                            │
+│  │   [Confirmation Dialog]                                       │
+│  │   "Apakah Anda yakin menghapus Kandang A?"                    │
+│  │   "Data terkait akan dihapus (Cascade Delete)"                │
+│  │   [Ya] [Tidak]                                                │
+│  │   ↓                                                            │
+│  │   IF Pemilik klik "Ya":                                       │
+│  │   • Sistem check relasi:                                      │
+│  │     - Ada produksi di kandang ini? (warning)                  │
+│  │     - Ada user (pekerja) di kandang ini? (warning)            │
+│  │   • Start transaction:                                        │
+│  │   • DELETE produksi_telur (cascade)                           │
+│  │   • UPDATE users set kandang_id = NULL (cascade)              │
+│  │   • DELETE kandang                                            │
+│  │   • Commit transaction                                        │
+│  │   • Redirect & success message                                │
+│  │   ↓                                                            │
+│  │   IF Pemilik klik "Tidak":                                    │
+│  │   • Close dialog, back to list                                │
+│  │   ↓                                                            │
+│  └─ END                                                           │
+│    ↓                                                              │
+│  END (KANDANG MANAGEMENT)                                        │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+TABEL KANDANG - STRUKTUR DATA:
+
+Column         Data Type      Rules
+─────────────────────────────────────────
+id             Bigint (PK)    Auto increment
+nama_kandang   VARCHAR(100)   Required, unique
+jumlah_ayam    UNSIGNED INT   >= 0
+keterangan     TEXT           Nullable
+status         ENUM           'aktif' / 'nonaktif', default='aktif'
+created_at     TIMESTAMP      System
+updated_at     TIMESTAMP      System
+
+Foreign Key Relations:
+• users.kandang_id → kandang.id (nullable, one pekerja per kandang)
+• produksi_telur.kandang_id → kandang.id (cascade delete)
+
+================================================================================
+
+FITUR 7: KELOLA MASTER HARGA TELUR (PEMILIK PETERNAKAN)
+================================================================================
+
+ALUR KELOLA HARGA:
+┌──────────────────────────────────────────────────────────────────┐
+│                  KELOLA HARGA FLOW                               │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pemilik klik "Kelola Harga Telur"                               │
+│    ↓                                                              │
+│  [Halaman Master Harga]                                          │
+│                                                                   │
+│  ┌─────────────────────────────────────────────┐                │
+│  │           MASTER HARGA TELUR                │                │
+│  │  [+ TAMBAH HARGA BARU]                      │                │
+│  │                                             │                │
+│  │ ┌─┬────────┬────────┬────────┬────────────┐│                │
+│  │ │#│ Tipe   │ Harga/ │ Harga/ │ Tgl Berlaku││                │
+│  │ │ │ Harga  │ Kg     │ Butir  │             ││                │
+│  │ ├─┼────────┼────────┼────────┼────────────┤│                │
+│  │ │1│Kandang │ 24000  │ 1500   │ 2026-04-07 ││                │
+│  │ │2│Grosir  │ 22000  │ 1375   │ 2026-04-07 ││                │
+│  │ │3│Konsumen│ 25000  │ 1562   │ 2026-04-07 ││                │
+│  │ │4│Kandang │ 23000  │ 1438   │ 2026-04-06 ││                │
+│  │ │ │        │        │        │  [History] ││                │
+│  │ └─┴────────┴────────┴────────┴────────────┘│                │
+│  └─────────────────────────────────────────────┘                │
+│    ↓                                                              │
+│  FLOW A: INPUT HARGA BARU                                        │
+│  ├─ Pemilik klik "+ Tambah Harga Baru"                           │
+│  │   ↓                                                            │
+│  │   [Form Input Harga]                                          │
+│  │   ├─ Jenis Harga: [DROPDOWN]                                  │
+│  │   │  - Kandang (borongan)                                     │
+│  │   │  - Grosir                                                 │
+│  │   │  - Konsumen (eceran)                                      │
+│  │   │                                                            │
+│  │   ├─ Harga per Kg: [NUMBER]                                   │
+│  │   │  Contoh: 24000                                            │
+│  │   │                                                            │
+│  │   ├─ Harga per Butir: [NUMBER - OPTIONAL]                     │
+│  │   │  Auto-calc = harga_kg / 16 jika kosong                    │
+│  │   │                                                            │
+│  │   ├─ Tanggal Berlaku: [DATE] default=today                   │
+│  │   │                                                            │
+│  │   ├─ Sumber Referensi: [TEXT - OPTIONAL]                      │
+│  │   │  Contoh: "Pasar Tradisional, Harga Pasar Online"         │
+│  │   │                                                            │
+│  │   └─ [SIMPAN] [BATAL]                                         │
+│  │   ↓                                                            │
+│  │   Validasi:                                                   │
+│  │   • Jenis harga harus dipilih                                 │
+│  │   • Harga per kg > 0                                          │
+│  │   • Tidak boleh duplikat (jenis + tgl sama hari)              │
+│  │   ↓                                                            │
+│  │   IF valid:                                                   │
+│  │   • INSERT ke tabel harga_telur                               │
+│  │   • IMPORTANT: NEVER delete/update harga lama                 │
+│  │   • created_at = NOW()                                        │
+│  │   • Redirect ke halaman harga                                 │
+│  │   • Success: "Harga telah ditambahkan"                        │
+│  │   ↓                                                            │
+│  │   IF tidak:                                                   │
+│  │   • Error message                                             │
+│  │   ↓                                                            │
+│  └─ END                                                           │
+│    ↓                                                              │
+│  FLOW B: LIHAT RIWAYAT HARGA                                     │
+│  ├─ Pemilik bisa filter:                                         │
+│  │   • By Jenis Harga (dropdown)                                 │
+│  │   • By Tanggal (date range)                                   │
+│  │   ↓                                                            │
+│  │   Sistem tampilkan:                                           │
+│  │   Tabel lengkap harga (dari dulu sampai sekarang)             │
+│  │   Urutkan by tanggal DESC (terbaru duluan)                    │
+│  │   ↓                                                            │
+│  │   Highlight: Harga terbaru untuk setiap jenis                 │
+│  │   ↓                                                            │
+│  └─ END                                                           │
+│    ↓                                                              │
+│  PENTING - SISTEM HARGA:                                         │
+│  ✓ NEVER Edit harga lama (gunakan new record saja)               │
+│  ✓ NEVER Delete harga (untuk referensi historis transaksi)      │
+│  ✓ Harga baru berlaku otomatis (langsung untuk penjualan)       │
+│  ✓ Transaksi penjualan referensi ke harga_telur_id spesifik    │
+│    sehingga tidak terpengaruh perubahan harga kemudian.          │
+│    ↓                                                              │
+│  END (HARGA MANAGEMENT)                                          │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+CONTOH SKENARIO HARGA:
+
+Hari 1 (06 April):
+Pemilik input harga:
+• Kandang: 23000/kg, 1438/butir
+• Grosir: 21500/kg, 1344/butir
+• Konsumen: 24000/kg, 1500/butir
+
+Hari 2 (07 April):
+Harga pasar naik, pemilik input harga baru:
+• Kandang: 24000/kg, 1500/butir  ← NEW
+• Grosir: 22000/kg, 1375/butir   ← NEW
+• Konsumen: 25000/kg, 1562/butir ← NEW
+
+Database akan menyimpan:
+- 3 records lama (06 April) - OK, tetap ada untuk referensi
+- 3 records baru (07 April) - untuk transaksi hari ini
+
+Saat input penjualan hari (07 April):
+Sistem automatically suggest harga terbaru (24000 dll)
+Tapi bisa diganti manual jika diperlukan.
+
+Transaksi yang sudah catat dengan harga lama tidak berubah.
+
+================================================================================
+
+FITUR 8: INPUT PENJUALAN TELUR (PEMILIK PETERNAKAN)
+================================================================================
+
+ALUR INPUT PENJUALAN (COMPLEX - MULTIPLE ITEMS + TRANSACTION):
+┌──────────────────────────────────────────────────────────────────┐
+│                   INPUT PENJUALAN FLOW                           │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pemilik klik "Input Penjualan"                                  │
+│    ↓                                                              │
+│  [Form Penjualan - Header]                                       │
+│  ├─ Tanggal Jual: [DATE PICKER] default=today                    │
+│  ├─ Nama Pembeli: [TEXT INPUT]                                   │
+│  ├─ Keterangan: [TEXT AREA - OPTIONAL]                           │
+│  └─ ─────────────────────────────────────                        │
+│    ↓                                                              │
+│  [Line Items Section]                                            │
+│  ┌─────────────────────────────────────────────────┐             │
+│  │ Items Penjualan                                 │             │
+│  │ [+ TAMBAH ITEM]                                 │             │
+│  │                                                 │             │
+│  │ Item #1                                         │             │
+│  │ ├─ Jenis/Harga Telur: [DROPDOWN]                │             │
+│  │ │  (suggest harga terbaru, bisa ubah)          │             │
+│  │ ├─ Satuan: [RADIO: Butir / Kg]                  │             │
+│  │ ├─ Jumlah: [NUMBER INPUT]                       │             │
+│  │ └─ Subtotal: [AUTO-CALC] (READ-ONLY)            │             │
+│  │                                                 │             │
+│  │ Item #2                                         │             │
+│  │ ├─ Jenis/Harga Telur: [Kandang 24000/kg]        │             │
+│  │ ├─ Satuan: [Kg selected]                        │             │
+│  │ ├─ Jumlah: [5]                                  │             │
+│  │ └─ Subtotal: [120,000] (5 * 24000)              │             │
+│  │ [REMOVE ITEM]                                   │             │
+│  │                                                 │             │
+│  │ Item #3                                         │             │
+│  │ ├─ Jenis/Harga Telur: [Grosir 22000/kg]         │             │
+│  │ ├─ Satuan: [Butir selected]                     │             │
+│  │ ├─ Jumlah: [200]                                │             │
+│  │ └─ Subtotal: [275,000] (200 butir * 22000/16)   │             │
+│  │ [REMOVE ITEM]                                   │             │
+│  │                                                 │             │
+│  │ ─────────────────────────────────────────────   │             │
+│  │ TOTAL HARGA: 395,000                            │             │
+│  │ ─────────────────────────────────────────────   │             │
+│  │ [PROSES PENJUALAN] [BATAL]                      │             │
+│  └─────────────────────────────────────────────────┘             │
+│    ↓                                                              │
+│  Pemilik klik [PROSES PENJUALAN]                                 │
+│    ↓                                                              │
+│  ┌─ SERVER SIDE VALIDATION (TRANSACTION) ──┐                     │
+│  │                                         │                     │
+│  │ 1. Validasi header:                     │                     │
+│  │    • Tanggal ≤ hari ini? ✓             │                     │
+│  │    • Ada items? (min 1) ✓              │                     │
+│  │    • Pembeli nama valid? ✓             │                     │
+│  │                                         │                     │
+│  │ 2. Per-item validation:                 │                     │
+│  │    LOOP setiap item:                    │                     │
+│  │    • Harga valid? ✓                     │                     │
+│  │    • Jumlah > 0? ✓                      │                     │
+│  │    • Satuan valid (butir/kg)? ✓         │                     │
+│  │                                         │                     │
+│  │ 3. Konversi satuan:                     │                     │
+│  │    LOOP setiap item:                    │                     │
+│  │    IF satuan = 'kg':                    │                     │
+│  │      jumlah_butir = input_qty * 16      │                     │
+│  │      jumlah_kg = input_qty              │                     │
+│  │    ELSE (butir):                        │                     │
+│  │      jumlah_butir = input_qty           │                     │
+│  │      jumlah_kg = input_qty / 16         │                     │
+│  │                                         │                     │
+│  │ 4. Stok check:                          │                     │
+│  │    Hitung total_butir_diambil dari semua items                │                     │
+│  │    IF total_butir_diambil > stok_butir saat ini:              │                     │
+│  │      ERROR: "Stok tidak cukup"          │                     │
+│  │      ROLLBACK, tampilkan error          │                     │
+│  │    ELSE lanjut:                         │                     │
+│  │                                         │                     │
+│  │ 5. Hitung total harga:                  │                     │
+│  │    total = 0                            │                     │
+│  │    LOOP setiap item:                    │                     │
+│  │      subtotal = qty * harga_satuan      │                     │
+│  │      total += subtotal                  │                     │
+│  │                                         │                     │
+│  │ START TRANSACTION:                      │                     │
+│  │                                         │                     │
+│  │ 6. Insert penjualan:                    │                     │
+│  │    INSERT INTO penjualan                │                     │
+│  │    (user_id, tanggal_jual, nama_pembeli,│                     │
+│  │     total_harga, keterangan)            │                     │
+│  │    VALUES (...)                         │                     │
+│  │    $penjualan_id = LAST_INSERT_ID()     │                     │
+│  │                                         │                     │
+│  │ 7. Insert detail per item:              │                     │
+│  │    LOOP setiap item:                    │                     │
+│  │      INSERT INTO detail_penjualan       │                     │
+│  │      (penjualan_id, harga_telur_id,     │                     │
+│  │       satuan_jual, jumlah_jual,         │                     │
+│  │       jumlah_butir, jumlah_kg,          │                     │
+│  │       harga_satuan, subtotal)           │                     │
+│  │                                         │                     │
+│  │ 8. Update stok:                         │                     │
+│  │    UPDATE stok_telur                    │                     │
+│  │    SET stok_butir = stok_butir - total_butir_diambil          │                     │
+│  │    stok_kg = stok_butir / 16            │                     │
+│  │    updated_at = NOW()                   │                     │
+│  │                                         │                     │
+│  │ COMMIT TRANSACTION                      │                     │
+│  │                                         │                     │
+│  │ 9. Response:                            │                     │
+│  │    Success message:                     │                     │
+│  │    "Penjualan berhasil disimpan!        │                     │
+│  │     Referensi: #PJL-2026-001"           │                     │
+│  │                                         │                     │
+│  │ 10. Redirect:                           │                     │
+│  │     → Halaman detail penjualan (optional)                     │                     │
+│  │     → Atau halaman laporan penjualan    │                     │
+│  │                                         │                     │
+│  │ ERROR HANDLING (rollback semua):         │                     │
+│  │ • Stock not enough → "Stok tidak cukup"│                     │
+│  │ • Invalid harga → "Harga tidak valid"   │                     │
+│  │ • DB error → "Gagal menyimpan, coba ulang"                    │                     │
+│  │                                         │                     │
+│  └─────────────────────────────────────────┘                     │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+│ CONTOH TRANSAKSI:                                                │
+│                                                                   │
+│ Header:                                                          │
+│ - Tanggal: 07 April 2026                                         │
+│ - Pembeli: PT. Brand Emas                                        │
+│                                                                   │
+│ Items:                                                           │
+│ 1. Kandang (24000/kg) - Kg satuan - 5 kg                         │
+│    = 5 * 24000 = 120,000                          │
+│    Konversi: 5 kg = 80 butir                      │
+│                                                    │
+│ 2. Grosir (22000/kg) - Butir satuan - 200 butir                 │
+│    = 200/16 kg = 12.5 kg                          │
+│    = 12.5 * 22000 = 275,000                       │
+│                                                    │
+│ Total Penjualan: 395,000                          │
+│ Total Fisikal: 80 + 200 = 280 butir → stok berkurang 280 butir  │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+TABEL PENJUALAN & DETAIL:
+
+Table: penjualan
+Column       Data Type      Rules
+────────────────────────────────────
+id           Bigint (PK)    Auto increment
+user_id      FK             Ref users.id
+tanggal_jual DATE           Not null, ≤ today
+nama_pembeli VARCHAR(100)   Nullable
+total_harga  DECIMAL(15,2)  Default 0
+keterangan   TEXT           Nullable
+created_at   TIMESTAMP      System
+updated_at   TIMESTAMP      System
+
+Table: detail_penjualan
+Column          Data Type      Rules
+─────────────────────────────────────
+id              Bigint (PK)    Auto increment
+penjualan_id    FK             Ref penjualan.id (cascade)
+harga_telur_id  FK             Ref harga_telur.id
+satuan_jual     ENUM           'butir' / 'kg'
+jumlah_jual     DECIMAL(10,2)  Not null
+jumlah_butir    UNSIGNED INT   Calculated
+jumlah_kg       DECIMAL(10,3)  Calculated
+harga_satuan    DECIMAL(12,2)  From harga_telur (snapshot)
+subtotal        DECIMAL(15,2)  jumlah * harga_satuan
+created_at      TIMESTAMP      System
+
+================================================================================
+
+FITUR 9: LIHAT LAPORAN PRODUKSI (PEMILIK PETERNAKAN)
+================================================================================
+
+ALUR LAPORAN PRODUKSI:
+┌──────────────────────────────────────────────────────────────────┐
+│                   LAPORAN PRODUKSI FLOW                          │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pemilik klik "Laporan Produksi"                                 │
+│    ↓                                                              │
+│  [Halaman Laporan Produksi]                                      │
+│                                                                   │
+│  ┌─────────────────────────────────────────────┐                │
+│  │        FILTER LAPORAN                       │                │
+│  │  ┌─────────────────────────────────────┐    │                │
+│  │  │ Bulan: [DROPDOWN] (default: bulan ini)  │                │
+│  │  │ Tahun: [DROPDOWN] (default: tahun ini)  │                │
+│  │  │ Kandang: [MULTI SELECT] (optional filter)│                │
+│  │  │                                         │                │
+│  │  │ [TAMPILKAN LAPORAN]                     │                │
+│  │  └─────────────────────────────────────┘    │                │
+│  └─────────────────────────────────────────────┘                │
+│    ↓                                                              │
+│  Sistem query & render laporan:                                  │
+│  ┌─ Database Query ──────────────────────┐                       │
+│  │                                       │                       │
+│  │ SELECT DATE(tanggal_produksi) as tgl,│                       │
+│  │        SUM(jumlah_butir) as total_butir,                      │                       │
+│  │        SUM(jumlah_kg) as total_kg     │                       │
+│  │ FROM produksi_telur                  │                       │
+│  │ WHERE MONTH(...) = bulan              │                       │
+│  │   AND YEAR(...) = tahun               │                       │
+│  │   AND kandang_id IN (filter)          │                       │
+│  │ GROUP BY tgl                          │                       │
+│  │ ORDER BY tgl DESC                     │                       │
+│  │                                       │                       │
+│  │ + Query kedua (per kandang):          │                       │
+│  │ SELECT kandang_id, nama_kandang,      │                       │
+│  │        SUM(jumlah_butir) as total     │                       │
+│  │ FROM produksi_telur JOIN kandang...   │                       │
+│  │ GROUP BY kandang_id                   │                       │
+│  │                                       │                       │
+│  └───────────────────────────────────────┘                       │
+│    ↓                                                              │
+│  [GRAFIK 1: GARIS - Produksi Harian]                             │
+│                                                                   │
+│           │                                                       │
+│     8000  │     ╱╲                                                │
+│     6000  │    ╱  ╲     ╱─╲                                       │
+│     4000  │   ╱    ╲   ╱   ╲     ╱╲                               │
+│     2000  │  ╱      ╲ ╱     ╲   ╱  ╲                              │
+│        0  │─────────────────────────────                          │
+│           └───────────────────────────────                        │
+│           1  2  3  4  5  6  7  8  9 ...                           │
+│                    Tangal                                         │
+│                                                                   │
+│  Label: "Produksi Harian (Butir)" vs Tanggal                     │
+│                                                                   │
+│  [GRAFIK 2: DONUT - Produksi per Kandang]                        │
+│                                                                   │
+│              ╱───────╲                                            │
+│           ╱             ╲                                         │
+│        ╱  Kandang A       ╲  45%                                  │
+│       │   Kandang B: 30% │                                       │
+│        ╲  Kandang C: 25% ╱                                        │
+│           ╲             ╱                                         │
+│              ╲───────╱                                            │
+│                                                                   │
+│  [TABEL: Detail Produksi]                                        │
+│                                                                   │
+│  ┌──┬──────────┬──────────┬────────┬──────────┬──────────┐       │
+│  │No│ Tanggal  │ Kandang  │ Satuan │ Jumlah   │ (Konversi)       │
+│  │  │          │          │        │ Input    │          │       │
+│  ├──┼──────────┼──────────┼────────┼──────────┼──────────┤       │
+│  │1 │07-Apr-26 │Kandang A │ butir  │   100    │ 6.25kg   │       │
+│  │2 │07-Apr-26 │Kandang B │ kg     │    5     │ 80 butir │       │
+│  │3 │06-Apr-26 │Kandang A │ butir  │   125    │ 7.81kg   │       │
+│  │...│ ...     │ ...      │ ...    │ ...      │ ...      │       │
+│  └──┴──────────┴──────────┴────────┴──────────┴──────────┘       │
+│                                                                   │
+│  [ACTION BUTTONS]                                                │
+│  [↓ EXPORT PDF] [↓ EXPORT EXCEL]                                 │
+│    ↓                                                              │
+│  Pemilik bisa:                                                    │
+│  • Export laporan ke PDF (include grafik)                        │
+│  • Export laporan ke Excel (data tabel)                          │
+│  • Print laporan (dari browser)                                  │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+EXPORT LOGIC:
+
+PDF Export:
+1. Sistem query data laporan
+2. Render HTML/blade view dengan data
+3. Convert ke PDF menggunakan DomPDF
+4. Return download: laporan-produksi-2026-04.pdf
+
+Excel Export:
+1. Sistem query data laporan
+2. Gunakan Maatwebsite Excel package
+3. Set header: Tanggal, Kandang, Satuan, Jumlah, Konversi
+4. Populate rows dari query result
+5. Return download: laporan-produksi-2026-04.xlsx
+
+================================================================================
+
+FITUR 10: LIHAT LAPORAN PENJUALAN (PEMILIK PETERNAKAN)
+================================================================================
+
+ALUR LAPORAN PENJUALAN:
+┌──────────────────────────────────────────────────────────────────┐
+│                   LAPORAN PENJUALAN FLOW                         │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Pemilik klik "Laporan Penjualan"                                │
+│    ↓                                                              │
+│  [Halaman Laporan Penjualan]                                     │
+│                                                                   │
+│  ┌─────────────────────────────────────────────┐                │
+│  │        FILTER LAPORAN                       │                │
+│  │  ┌─────────────────────────────────────┐    │                │
+│  │  │ Bulan: [DROPDOWN] (default: sekarang)   │                │
+│  │  │ Tahun: [DROPDOWN] (default: sekarang)   │                │
+│  │  │ Pembeli: [TEXT SEARCH] (optional)       │                │
+│  │  │                                         │                │
+│  │  │ [TAMPILKAN LAPORAN]                     │                │
+│  │  └─────────────────────────────────────┘    │                │
+│  └─────────────────────────────────────────────┘                │
+│    ↓                                                              │
+│  Sistem query penjualan & detail:                                │
+│    ↓                                                              │
+│  [SUMMARY CARDS]                                                 │
+│                                                                   │
+│  ┌──────────────┬──────────────┬──────────────┐                 │
+│  │ Total Trx    │ Total Harga  │ Rata-rata Trx │                │
+│  │ 25 transaksi │ Rp 5,200,000 │ Rp 208,000   │                │
+│  └──────────────┴──────────────┴──────────────┘                 │
+│    ↓                                                              │
+│  [GRAFIK: BAR - Penjualan per Hari/Minggu]                       │
+│                                                                   │
+│     Rp│                                                           │
+│2000K  │    ╱╲                                                     │
+│ 1500K │   ╱  ╲    ╱─╲                                             │
+│ 1000K │  ╱    ╲  ╱   ╲   ╱╲                                       │
+│  500K │ ╱      ╲╱     ╲ ╱  ╲                                      │
+│     0 │─────────────────────                                    │
+│       └─────────────────────                                    │
+│        1  2  3  4  5  6  7 ...                                    │
+│                 Tanggal                                          │
+│                                                                   │
+│  [TABEL: Daftar Penjualan]                                       │
+│                                                                   │
+│  ┌──┬──────────┬──────────────┬────────────┬──────────────┐     │
+│  │No│ Tanggal  │ Pembeli      │ Items      │ Total Harga  │     │
+│  │  │          │              │            │              │     │
+│  ├──┼──────────┼──────────────┼────────────┼──────────────┤     │
+│  │1 │07-Apr-26 │PT Brand Emas │ 2 items    │ 395,000      │[▸]  │
+│  │2 │07-Apr-26 │Toko Bunga    │ 1 item     │ 120,000      │[▸]  │
+│  │3 │06-Apr-26 │Agen Telur    │ 3 items    │ 680,000      │[▸]  │
+│  │...│ ...     │ ...          │ ...        │ ...          │ ... │
+│  └──┴──────────┴──────────────┴────────────┴──────────────┘     │
+│                                                                   │
+│  [Detail Expansion - Click ▸]                                    │
+│  ┌──────────────────────────────────────────┐                   │
+│  │ Transaksi #1 - PT Brand Emas             │                   │
+│  │                                          │                   │
+│  │ Item 1:                                  │                   │
+│  │  Kandang (24000/kg) - 5 kg = 120,000    │                   │
+│  │                                          │                   │
+│  │ Item 2:                                  │                   │
+│  │  Grosir (22000/kg) - 200 butir = 275,000│                   │
+│  │                                          │                   │
+│  │ Total Fisikal: 280 butir (17.5 kg)      │                   │
+│  │ Total Harga: 395,000                    │                   │
+│  │                                          │                   │
+│  │ [CETAK STRUK] [EDIT] [HAPUS]            │                   │
+│  └──────────────────────────────────────────┘                   │
+│    ↓                                                              │
+│  [ACTION BUTTONS]                                                │
+│  [↓ EXPORT PDF] [↓ EXPORT EXCEL]                                 │
+│    ↓                                                              │
+│  END                                                             │
+│                                                                   │
+│ EDIT/DELETE FUNCTIONALITY (Optional):                            │
+│ • Edit: Buka form dengan data transaksi terpopulasi             │
+│   - Bisa ubah qty item (dengan re-validation stok)              │
+│   - Update stok jika ada perubahan                               │
+│ • Delete: Confirm, kembalikan stok (reverse)                     │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+================================================================================
+
+SUMMARY - ALUR LENGKAP
+
+✓ 1. LOGIN
+  → Validasi username/password
+  → Redirect ke dashboard sesuai role
+
+✓ 2. INPUT PRODUKSI (PEKERJA)
+  → Form input: tanggal, satuan, jumlah, keterangan
+  → Auto konversi satuan
+  → Auto increment stok
+
+✓ 3. LIHAT DASHBOARD (SEMUA)
+  → Query 4-5 metric utama
+  → Tampil cards & grafik
+  → Perbedaan view: pekerja vs pemilik
+
+✓ 4. LIHAT RIWAYAT PRODUKSI (SEMUA)
+  → Query tabel produksi_telur
+  → Filter & pagination
+  → Pemilik bisa edit/delete dengan re-calc stok
+
+✓ 5. LIHAT STOK (SEMUA)
+  → Query single record stok_telur
+  → Real-time info
+  → Alert jika menipis/habis
+
+✓ 6. KELOLA KANDANG (PEMILIK)
+  → CRUD kandang
+  → Master data untuk pengelompokan produksi
+  → Cascade delete
+
+✓ 7. KELOLA HARGA (PEMILIK)
+  → Input harga baru (never delete lama)
+  → Historis harga
+  → Multi jenis harga (kandang/grosir/konsumen)
+
+✓ 8. INPUT PENJUALAN (PEMILIK)
+  → COMPLEX: multiple items per transaksi
+  → Konversi satuan per item
+  → Validasi stok total
+  → Transaction-based untuk atomicity
+  → Auto decrement stok
+
+✓ 9. LAPORAN PRODUKSI (PEMILIK)
+  → Query + filter by bulan/tahun/kandang
+  → Grafik garis + donut
+  → Tabel detail
+  → Export PDF & Excel
+
+✓ 10. LAPORAN PENJUALAN (PEMILIK)
+  → Query + filter by bulan/tahun/pembeli
+  → Summary cards
+  → Grafik bar
+  → Tabel dengan expand detail
+  → Export PDF & Excel
+
+================================================================================
+
+VERIFIKASI FINAL:
+✓ Semua use case sudah tercakup
+✓ Alur per fitur sudah detail
+✓ Konversi satuan sudah jelas (butir ↔ kg dengan nilai dari pengaturan)
+✓ Stok management sudah jelas (single record, auto-update)
+✓ Harga historis sudah jelas (never delete, snapshot di transaksi)
+✓ Perbedaan role (pekerja vs pemilik) sudah tegas
+✓ Error handling & validation sudah lengkap
+✓ Transaction logic untuk penjualan sudah atomic
+
+================================================================================

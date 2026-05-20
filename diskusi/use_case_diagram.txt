@@ -1,0 +1,317 @@
+MERMAID USE CASE DIAGRAM - HANS JAYA POULTRY FARM
+===================================================
+
+Salin kode di bawah ini dan paste ke draw.io atau Mermaid Live Editor:
+
+---
+
+graph TB
+    subgraph System["SISTEM MANAJEMEN & MONITORING PRODUKSI PENJUALAN TELUR AYAM PETELUR"]
+        %% Base Use Cases (Authentication)
+        Login["<b>Login</b>"]
+        Logout["<b>Logout</b>"]
+        
+        %% Shared Use Cases
+        Dashboard["Lihat<br/>Dashboard"]
+        StokTelur["Lihat Stok<br/>Telur"]
+        RiwayatProduksi["Lihat Riwayat<br/>Produksi"]
+        
+        %% Pekerja-Specific Use Cases
+        InputProduksi["Input Produksi<br/>Telur Harian"]
+        
+        %% Pemilik-Specific Use Cases
+        KelolKandang["Kelola Data<br/>Kandang"]
+        EditKandang["Edit Kandang"]
+        HapusKandang["Hapus Kandang"]
+        TambahKandang["Tambah Kandang"]
+        
+        KelolHarga["Kelola Master<br/>Harga Telur"]
+        TambahHarga["Tambah Harga"]
+        LihatRiwayatHarga["Lihat Riwayat<br/>Harga"]
+        
+        InputPenjualan["Input Penjualan<br/>Telur"]
+        ValidasiStok["Validasi Stok"]
+        KonversiSatuan["Konversi Satuan<br/>Otomatis"]
+        
+        LaporanProduksi["Lihat Laporan<br/>Produksi"]
+        GrafikProduksi["Tampilkan Grafik<br/>Produksi"]
+        ExportPDF1["Export PDF"]
+        ExportExcel1["Export Excel"]
+        
+        LaporanPenjualan["Lihat Laporan<br/>Penjualan"]
+        GrafikPenjualan["Tampilkan Grafik<br/>Penjualan"]
+        DetailPenjualan["Lihat Detail<br/>Penjualan"]
+        ExportPDF2["Export PDF"]
+        ExportExcel2["Export Excel"]
+        
+
+    end
+
+    %% Actors
+    Pekerja["👤 Pekerja<br/>Kandang"]
+    Pemilik["👨‍💼 Pemilik<br/>Peternakan"]
+
+    %% Pekerja Relationships
+    Pekerja -->|akses| Login
+    Pekerja -->|akses| Logout
+    Pekerja -->|1| Dashboard
+    Pekerja -->|2| RiwayatProduksi
+    Pekerja -->|3| InputProduksi
+    Pekerja -->|4| StokTelur
+    
+    %% Pemilik Relationships
+    Pemilik -->|akses| Login
+    Pemilik -->|akses| Logout
+    Pemilik -->|1| Dashboard
+    Pemilik -->|2| StokTelur
+    Pemilik -->|3| RiwayatProduksi
+    Pemilik -->|4| KelolKandang
+    Pemilik -->|5| KelolHarga
+    Pemilik -->|6| InputPenjualan
+    Pemilik -->|7| LaporanProduksi
+    Pemilik -->|8| LaporanPenjualan
+    
+
+    %% Kandang Sub Use Cases (extend/include)
+    KelolKandang -.->|include| TambahKandang
+    KelolKandang -.->|include| EditKandang
+    KelolKandang -.->|include| HapusKandang
+    
+    %% Harga Sub Use Cases (extend/include)
+    KelolHarga -.->|include| TambahHarga
+    KelolHarga -.->|include| LihatRiwayatHarga
+    
+    %% Produksi Sub Use Cases (extend/include)
+    InputProduksi -.->|include| KonversiSatuan
+    
+    %% Penjualan Sub Use Cases (extend/include)
+    InputPenjualan -.->|include| KonversiSatuan
+    InputPenjualan -.->|include| ValidasiStok
+    InputPenjualan -.->|include| StokTelur
+    
+    %% Laporan Produksi Sub Use Cases
+    LaporanProduksi -.->|include| GrafikProduksi
+    LaporanProduksi -.->|extend| ExportPDF1
+    LaporanProduksi -.->|extend| ExportExcel1
+    
+    %% Laporan Penjualan Sub Use Cases
+    LaporanPenjualan -.->|include| GrafikPenjualan
+    LaporanPenjualan -.->|include| DetailPenjualan
+    LaporanPenjualan -.->|extend| ExportPDF2
+    LaporanPenjualan -.->|extend| ExportExcel2
+    
+
+    %% Styling
+    style System fill:#fff8dc,stroke:#333,stroke-width:3px
+    style Pekerja fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style Pemilik fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    
+    style Login fill:#e1f5fe,stroke:#01579b
+    style Logout fill:#e1f5fe,stroke:#01579b
+    style Dashboard fill:#f3e5f5,stroke:#6a1b9a
+    style StokTelur fill:#f3e5f5,stroke:#6a1b9a
+    style RiwayatProduksi fill:#f3e5f5,stroke:#6a1b9a
+    
+    style InputProduksi fill:#e8f5e9,stroke:#1b5e20
+    
+    style KelolKandang fill:#fff3e0,stroke:#e65100
+    style TambahKandang fill:#ffe0b2,stroke:#e65100
+    style EditKandang fill:#ffe0b2,stroke:#e65100
+    style HapusKandang fill:#ffe0b2,stroke:#e65100
+    
+    style KelolHarga fill:#fff3e0,stroke:#e65100
+    style TambahHarga fill:#ffe0b2,stroke:#e65100
+    style LihatRiwayatHarga fill:#ffe0b2,stroke:#e65100
+    
+    style InputPenjualan fill:#fff3e0,stroke:#e65100
+    style ValidasiStok fill:#fce4ec,stroke:#c2185b
+    style KonversiSatuan fill:#fce4ec,stroke:#c2185b
+    
+    style LaporanProduksi fill:#fff3e0,stroke:#e65100
+    style GrafikProduksi fill:#ffe0b2,stroke:#e65100
+    style ExportPDF1 fill:#f1f8e9,stroke:#558b2f
+    style ExportExcel1 fill:#f1f8e9,stroke:#558b2f
+    
+    style LaporanPenjualan fill:#fff3e0,stroke:#e65100
+    style GrafikPenjualan fill:#ffe0b2,stroke:#e65100
+    style DetailPenjualan fill:#ffe0b2,stroke:#e65100
+    style ExportPDF2 fill:#f1f8e9,stroke:#558b2f
+    style ExportExcel2 fill:#f1f8e9,stroke:#558b2f
+
+---
+
+PENJELASAN DIAGRAM LENGKAP:
+===========================
+
+1. ACTORS (2 Aktor Sistem):
+   
+   👤 PEKERJA KANDANG (Hijau)
+   - Akses terbatas, hanya fitur input & view
+   - Login → Akses menu sesuai role
+   - Tidak bisa manage data master
+   
+   👨‍💼 PEMILIK PETERNAKAN (Kuning)
+   - Akses penuh ke semua fitur operasional
+   - Full CRUD untuk kandang, harga, penjualan
+   - Akses laporan & analisis
+
+2. AUTHENTICATION BASE USE CASES:
+   
+   ✓ Login
+     - Semua actor harus login dulu
+     - Validasi kredensial
+     - Set role & session
+   
+   ✓ Logout
+     - Semua actor bisa logout
+     - Clear session
+
+3. SHARED USE CASES (Accessible by multiple actors):
+   
+   ✓ Lihat Dashboard (Pekerja + Pemilik + Admin)
+     • Pekerja: Ringkasan produksi kandang mereka
+     • Pemilik: Ringkasan lengkap bisnis
+     • Admin: View monitoring
+   
+   ✓ Lihat Stok Telur (Pekerja + Pemilik)
+     • Info real-time stok (butir & kg)
+     • Alert jika menipis/habis
+   
+   ✓ Lihat Riwayat Produksi (Pekerja + Pemilik)
+     • Pekerja: Histori kandang mereka saja
+     • Pemilik: Histori semua kandang (bisa filter, edit, delete)
+
+3. PEKERJA-SPECIFIC USE CASES:
+   
+   ✓ Input Produksi Telur Harian (Pekerja only)
+     → include: Konversi Satuan Otomatis
+     • Input tanggal, satuan (butir/kg), jumlah
+     • Auto-konversi ke satuan lain
+     • Auto-increment stok
+     • Only kandang sendiri
+
+4. PEMILIK-SPECIFIC USE CASES:
+
+   A. KELOLA DATA KANDANG
+      ├─ include: Tambah Kandang
+      ├─ include: Edit Kandang
+      └─ include: Hapus Kandang (cascade)
+
+   B. KELOLA MASTER HARGA TELUR
+      ├─ include: Tambah Harga (never delete, historis)
+      └─ include: Lihat Riwayat Harga
+
+   C. INPUT PENJUALAN TELUR
+      ├─ include: Konversi Satuan Otomatis
+      ├─ include: Validasi Stok
+      └─ include: Lihat Stok Telur (validate available)
+      • Multiple items per transaksi
+      • Auto-decrement stok
+      • Transaction-based (atomicity)
+
+   D. LIHAT LAPORAN PRODUKSI
+      ├─ include: Tampilkan Grafik Produksi (garis + donut)
+      ├─ extend: Export PDF
+      └─ extend: Export Excel
+      • Query dengan filter bulan/tahun/kandang
+      • Tabel detail + visualisasi
+
+   E. LIHAT LAPORAN PENJUALAN
+      ├─ include: Tampilkan Grafik Penjualan (bar chart)
+      ├─ include: Lihat Detail Penjualan (modal)
+      ├─ extend: Export PDF
+      └─ extend: Export Excel
+      • Summary cards (total trx, harga, rata-rata)
+      • Tabel penjualan dengan expand detail
+
+6. ADMIN-SPECIFIC USE CASES:
+
+   A. KELOLA DATA USER
+      ├─ include: Tambah User
+      ├─ include: Edit User
+      └─ include: Hapus User
+      • Create pekerja & pemilik accounts
+      • Assign role dan kandang
+      • Reset password
+
+   B. ATUR PENGATURAN SISTEM
+      └─ include: Atur Konversi Satuan
+      • Konfigurasi konversi (butir ↔ kg)
+      • Default: 1kg = 16 butir
+      • Bisa diubah sesuai kebutuhan
+
+7. INTERNAL/SYSTEM USE CASES (pink - bukan actor call, tapi sub-process):
+   
+   ✓ Konversi Satuan Otomatis
+     - Include dari: Input Produksi, Input Penjualan
+     - Ambil dari tabel pengaturan, bukan hardcode
+   
+   ✓ Validasi Stok
+     - Include dari: Input Penjualan
+     - Check stok mencukupi sebelum commit
+   
+   ✓ Tampilkan Grafik
+     - Include dari: Laporan Produksi, Laporan Penjualan
+     - Render Chart.js (garis, donut, bar)
+   
+   ✓ Export PDF/Excel
+     - Extend dari: Laporan Produksi, Laporan Penjualan
+     - Optional, hanya jika user minta export
+
+RELATIONSHIP EXPLAINED:
+=======================
+
+include (─────→):
+  Dependency wajib yang selalu terjadi
+  Contoh: Login include ke semua di dalam sistem
+  Contoh: Input Penjualan include Konversi Satuan
+
+extend (- - - →):
+  Optional, hanya terjadi dalam kondisi tertentu
+  Contoh: Laporan extend Export PDF (hanya jika user klik export)
+
+RINGKASAN MATRIX AKSES:
+
+┌──────────────────────────┬──────────┬──────────┐
+│ Use Case                 │ Pekerja  │ Pemilik  │
+├──────────────────────────┼──────────┼──────────┤
+│ Login / Logout           │    ✓     │    ✓     │
+│ Lihat Dashboard          │    ✓     │    ✓     │
+│ Lihat Stok Telur         │    ✓     │    ✓     │
+│ Lihat Riwayat Produksi   │    ✓*    │    ✓     │
+│ Input Produksi Harian    │    ✓*    │    ✗     │
+│ Kelola Kandang (CRUD)    │    ✗     │    ✓     │
+│ Kelola Harga Telur       │    ✗     │    ✓     │
+│ Input Penjualan          │    ✗     │    ✓     │
+│ Laporan Produksi         │    ✗     │    ✓     │
+│ Laporan Penjualan        │    ✗     │    ✓     │
+└──────────────────────────┴──────────┴──────────┘
+* = Limited to own data only (Pekerja hanya kandang mereka)
+
+WARNA LEGENDA:
+==============
+🟦 Biru     = Authentication (Login/Logout)
+🟪 Ungu     = Shared View Use Cases (Dashboard, StokTelur, Riwayat)
+🟩 Hijau    = Pekerja-Specific (Input Produksi)
+🟨 Kuning   = Pemilik-Specific (Kandang, Harga, Penjualan, Laporan)
+� Pink     = Internal/System Process (Konversi, Validasi, Grafik)
+
+TOTAL USE CASES: 20+
+TOTAL ACTORS: 2
+STATUS: COMPREHENSIVE & LENGKAP ✓
+
+CARA PAKAI DI DRAW.IO:
+====================
+1. Buka draw.io
+2. Buat diagram baru
+3. Di menu, pilih: Arrange → Diagram → Mermaid
+4. Paste seluruh kode di atas (mulai dari "graph TB" sampai "style Transaksi")
+5. Diagram akan terrender otomatis
+6. Save dan export sesuai kebutuhan
+
+ALTERNATIF (Mermaid Live Editor):
+==================================
+1. Buka: https://mermaid.live
+2. Paste kode di text editor
+3. Adjust styling sesuai preferensi
+4. Export sebagai SVG atau PNG

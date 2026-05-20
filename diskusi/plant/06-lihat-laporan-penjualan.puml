@@ -1,0 +1,49 @@
+@startuml
+|Pemilik|
+start
+:Buka Laporan Penjualan;
+|Sistem|
+:Load Data Default (Bulan Ini);
+:Query Total Penjualan;
+:Query Breakdown per Jenis Harga;
+:Kalkulasi Revenue;
+:Render Tabel & Grafik;
+|Pemilik|
+:Lihat Summary Penjualan;
+:Lihat Tabel Detail;
+:Lihat Grafik Trend;
+:Pilih Periode Filter;
+if (Pilih Kandang?) then (Ya)
+  :Pilih Kandang Tertentu;
+else (Semua Kandang)
+  :Gunakan Semua Kandang;
+endif
+:Klik Apply Filter;
+|Sistem|
+:Query Data dengan Filter;
+if (Ada Data?) then (Ya)
+  :Render Laporan Baru;
+else (Tidak Ada)
+  :Pesan "Belum Ada Data";
+endif
+|Pemilik|
+if (Export?) then (Ya)
+  if (Format?) then (PDF)
+    |Sistem|
+    :Generate PDF;
+    :Download File;
+    |Pemilik|
+    :File Tersimpan;
+  else (Excel)
+    |Sistem|
+    :Generate Excel;
+    :Download File;
+    |Pemilik|
+    :File Tersimpan;
+  endif
+else (Tidak)
+  :Lanjut Tanpa Export;
+endif
+:Selesai;
+end
+@enduml

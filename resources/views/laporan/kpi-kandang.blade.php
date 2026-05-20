@@ -129,7 +129,7 @@
             @if ($kandang['hari_pencatatan'] > 0)
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900">📊 {{ $kandang['nama_kandang'] }} - Trend Produksi & Metrik</h3>
+                    <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-chart-line text-blue-600"></i> {{ $kandang['nama_kandang'] }} - Trend Produksi & Metrik</h3>
                 </div>
                 
                 <div class="p-6">
@@ -143,7 +143,7 @@
 
         <!-- Legend -->
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <h3 class="font-bold text-blue-900 mb-3">📋 Penjelasan Metrik</h3>
+            <h3 class="font-bold text-blue-900 mb-3"><i class="fas fa-list text-blue-900"></i> Penjelasan Metrik</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
                 <div>
                     <p><strong>HDP (Hen Day Production) %:</strong> Persentase produksi telur per hari terhadap jumlah ayam</p>

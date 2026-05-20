@@ -1,0 +1,45 @@
+@startuml
+|Pemilik|
+start
+:Buka Kelola Kandang;
+|Sistem|
+:Tampilkan Tabel Daftar Kandang;
+|Pemilik|
+:Pilih Aksi;
+if (Aksi?) then (Tambah)
+  :Input Nama Kandang;
+  :Input Jumlah Ayam;
+  :Input Keterangan;
+  :Pilih Pekerja PIC;
+  :Klik Simpan;
+  |Sistem|
+  :Validasi Data;
+  if (Valid?) then (Ya)
+    :Simpan ke Database;
+  else (Tidak)
+    :Tampilkan Error;
+    |Pemilik|
+    :Input Ulang;
+  endif
+else if (Edit) then (Edit)
+  :Ubah Data Kandang;
+  :Klik Simpan;
+  |Sistem|
+  :Validasi Data;
+  if (Valid?) then (Ya)
+    :Update Database;
+  else (Tidak)
+    :Tampilkan Error;
+  endif
+else (Hapus)
+  :Klik Hapus;
+  |Sistem|
+  :Hapus Kandang & Data Terkait;
+endif
+|Sistem|
+:Update Tabel Kandang;
+|Pemilik|
+:Lihat Tabel Terupdate;
+:Selesai;
+end
+@enduml

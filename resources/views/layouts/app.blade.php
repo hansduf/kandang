@@ -13,16 +13,24 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Font Awesome 6 (CDN - Fast Global Cache) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
-    <div class="flex h-screen overflow-hidden bg-gray-100">
+    <div class="flex h-screen overflow-hidden bg-gray-100" x-data="{ sidebarOpen: localStorage.getItem('sidebar-open') !== 'false' }">
         <!-- Sidebar -->
-        <x-sidebar />
+        <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="transition-all duration-300 ease-in-out overflow-hidden bg-blue-900">
+            <x-sidebar />
+        </div>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-auto">
+        <div class="flex-1 flex flex-col overflow-auto transition-all duration-300 ease-in-out">
             <!-- Navbar -->
             <x-navbar />
 

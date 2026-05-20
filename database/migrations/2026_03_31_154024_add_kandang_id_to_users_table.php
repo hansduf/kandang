@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('kandang_id')
                   ->nullable()
                   ->after('role')
-                  ->constrained('kandang')
+                  ->constrained('kandangs')
                   ->nullOnDelete();
         });
     }
@@ -27,8 +27,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['kandang_id']);
-            $table->dropColumn(['kandang_id', 'role']);
+            // Drop columns with conditional check
+            if (Schema::hasColumn('users', 'kandang_id')) {
+                // Use onDelete('cascade') which will handle the FK constraint automatically on some DB systems
+                // so we just drop the column
+                $table->dropColumn('kandang_id');
+            }
+            if (Schema::hasColumn('users', 'role')) {
+                $table->dropColumn('role');
+            }
         });
     }
 };

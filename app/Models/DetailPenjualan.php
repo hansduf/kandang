@@ -27,7 +27,7 @@ class DetailPenjualan extends Model
 
     protected $casts = [
         'tanggal_penjualan' => 'date',
-        'jam_penjualan' => 'date_format:H:i:s',
+        'jam_penjualan' => 'string',
     ];
 
     public function penjualan()

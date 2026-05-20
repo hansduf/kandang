@@ -88,109 +88,151 @@
             </script>
         </div>
 
-        <!-- KPI Cards Row 1 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Card 1: Stok Telur -->
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-200 p-3">
-                <p class="text-blue-600 text-xs font-medium">Stok Telur</p>
-                <p class="text-2xl font-bold text-blue-900 mt-1">{{ number_format($stok->stok_butir ?? 0, 0, ',', '.') }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">{{ number_format($stok->stok_kg ?? 0, 1, ',', '.') }} kg</p>
+        <!-- KPI Cards Section Header -->
+        <div class="space-y-4">
+            <!-- KPI Cards Row 1: Main Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Card 1: Stok Telur -->
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow border border-blue-200 p-4 min-h-[110px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-blue-600 text-xs font-bold uppercase tracking-wide">Stok Telur</p>
+                        <p class="text-3xl font-bold text-blue-900 mt-2">{{ number_format($stok->stok_butir ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <p class="text-blue-700 text-xs font-medium">{{ number_format($stok->stok_kg ?? 0, 1, ',', '.') }} kg</p>
+                </div>
+
+                <!-- Card 2: Total Ayam Sekarang -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow border border-green-200 p-4 min-h-[110px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-green-600 text-xs font-bold uppercase tracking-wide">Total Ayam Sekarang</p>
+                        <p class="text-3xl font-bold text-green-900 mt-2">{{ number_format($totalAyamSekarang ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <p class="text-green-700 text-xs font-medium">Awal: {{ number_format($totalAyamAwal ?? 0, 0, ',', '.') }} ekor</p>
+                </div>
+
+                <!-- Card 3: Total Kematian Periode -->
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow border border-red-200 p-4 min-h-[110px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-red-600 text-xs font-bold uppercase tracking-wide">Kematian Periode</p>
+                        <p class="text-3xl font-bold text-red-900 mt-2">{{ number_format($totalKematianPeriode ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <p class="text-red-700 text-xs font-medium">ekor</p>
+                </div>
             </div>
 
-            <!-- Card 2: Total Ayam Sekarang -->
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-sm border border-green-200 p-3">
-                <p class="text-green-600 text-xs font-medium">Total Ayam Sekarang</p>
-                <p class="text-2xl font-bold text-green-900 mt-1">{{ number_format($totalAyamSekarang ?? 0, 0, ',', '.') }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">ekor</p>
-                <p class="text-green-600 text-xs mt-1 font-medium">Ayam Awal: {{ number_format($totalAyamAwal ?? 0, 0, ',', '.') }} ekor</p>
+            <!-- KPI Cards Row 2: Period Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Produksi -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow border border-green-200 p-4 min-h-[100px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-green-600 text-xs font-bold uppercase tracking-wide">
+                            @if($periode == 'hari')
+                                Produksi Hari
+                            @elseif($periode == '7hari')
+                                Produksi 7 Hari
+                            @elseif($periode == 'bulan')
+                                Produksi Bulan
+                            @else
+                                Produksi Total
+                            @endif
+                        </p>
+                        <p class="text-2xl font-bold text-green-900 mt-2">{{ number_format($produksiPeriode ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <p class="text-green-700 text-xs font-medium">butir</p>
+                </div>
+
+                <!-- Card 2: Penjualan -->
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow border border-yellow-200 p-4 min-h-[100px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-yellow-600 text-xs font-bold uppercase tracking-wide">
+                            @if($periode == 'hari')
+                                Penjualan Hari
+                            @elseif($periode == '7hari')
+                                Penjualan 7 Hari
+                            @elseif($periode == 'bulan')
+                                Penjualan Bulan
+                            @else
+                                Penjualan Total
+                            @endif
+                        </p>
+                        <p class="text-2xl font-bold text-yellow-900 mt-2">Rp {{ number_format($penjualanPeriode ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <p class="text-yellow-700 text-xs font-medium">transaksi</p>
+                </div>
+
+                <!-- Card 3: Kandang Aktif -->
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow border border-purple-200 p-4 min-h-[100px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-purple-600 text-xs font-bold uppercase tracking-wide">Kandang Aktif</p>
+                        <p class="text-2xl font-bold text-purple-900 mt-2">{{ $jumlahKandang ?? 0 }}</p>
+                    </div>
+                    <p class="text-purple-700 text-xs font-medium">unit</p>
+                </div>
+
+                <!-- Status Card -->
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg shadow border border-emerald-200 p-4 min-h-[100px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-emerald-600 text-xs font-bold uppercase tracking-wide">Status Sistem</p>
+                        <p class="text-2xl font-bold text-emerald-900 mt-2"><i class="fas fa-check-circle text-emerald-600"></i> Aktif</p>
+                    </div>
+                    <p class="text-emerald-700 text-xs font-medium">Semua berjalan normal</p>
+                </div>
             </div>
 
-            <!-- Card 3: Total Kematian Periode -->
-            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-sm border border-red-200 p-3">
-                <p class="text-red-600 text-xs font-medium">Kematian Periode</p>
-                <p class="text-2xl font-bold text-red-900 mt-1">{{ number_format($totalKematianPeriode ?? 0, 0, ',', '.') }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">ekor</p>
+            <!-- Performance Metrics Row: HDP, HHP, Mortality -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- HDP Card -->
+                <div class="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg shadow border border-sky-200 p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sky-600 text-xs font-bold uppercase tracking-wide">Rata-rata HDP</p>
+                            <p class="text-3xl font-bold text-sky-900 mt-2">{{ number_format($avgHDPPeriode ?? 0, 2) }}%</p>
+                        </div>
+                        <i class="fas fa-chart-line text-sky-600 text-lg"></i>
+                    </div>
+                    <div class="border-t border-sky-300 mt-3 pt-3">
+                        <p class="text-xs font-semibold text-sky-700">Hen Day Production</p>
+                        <p class="text-xs text-gray-600 mt-1">(Telur ÷ Ayam Hidup) × 100</p>
+                        <p class="text-xs font-bold text-sky-600 mt-2"><i class="fas fa-circle text-sky-600" style="font-size: 6px;"></i> Target: 87-95%</p>
+                    </div>
+                </div>
+
+                <!-- HHP Card -->
+                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg shadow border border-cyan-200 p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-cyan-600 text-xs font-bold uppercase tracking-wide">Rata-rata HHP</p>
+                            <p class="text-3xl font-bold text-cyan-900 mt-2">{{ number_format($avgHHPPeriode ?? 0, 2) }}%</p>
+                        </div>
+                        <i class="fas fa-chart-line text-cyan-600 text-lg"></i>
+                    </div>
+                    <div class="border-t border-cyan-300 mt-3 pt-3">
+                        <p class="text-xs font-semibold text-cyan-700">Hen House Production</p>
+                        <p class="text-xs text-gray-600 mt-1">(Telur ÷ Kapasitas) × 100</p>
+                        <p class="text-xs font-bold text-cyan-600 mt-2"><i class="fas fa-circle text-cyan-600" style="font-size: 6px;"></i> Target: 80-90%</p>
+                    </div>
+                </div>
+
+                <!-- Mortality Card -->
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow border border-red-200 p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-red-600 text-xs font-bold uppercase tracking-wide">Rata-rata Mortality</p>
+                            <p class="text-3xl font-bold text-red-900 mt-2">{{ number_format($avgMortalityPeriode ?? 0, 2) }}%</p>
+                        </div>
+                        <i class="fas fa-chart-line text-red-600 text-lg"></i>
+                    </div>
+                    <div class="border-t border-red-300 mt-3 pt-3">
+                        <p class="text-xs font-semibold text-red-700">Mortality Rate</p>
+                        <p class="text-xs text-gray-600 mt-1">(Ayam Mati ÷ Ayam Awal) × 100</p>
+                        <p class="text-xs font-bold text-red-600 mt-2"><i class="fas fa-circle text-red-600" style="font-size: 6px;"></i> Target: &lt; 3% ✓</p>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- KPI Cards Row 2 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <!-- Card 1: Produksi -->
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-sm border border-green-200 p-3">
-                <p class="text-green-600 text-xs font-medium">
-                    @if($periode == 'hari')
-                        Produksi ({{ \Carbon\Carbon::createFromFormat('Y-m-d', $tanggal)->format('d F') }})
-                    @elseif($periode == '7hari')
-                        Produksi (7 Hari)
-                    @elseif($periode == 'bulan')
-                        Produksi (Bulan)
-                    @else
-                        Produksi Total
-                    @endif
-                </p>
-                <p class="text-2xl font-bold text-green-900 mt-1">{{ number_format($produksiPeriode ?? 0, 0, ',', '.') }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">butir</p>
-            </div>
-
-            <!-- Card 2: Penjualan -->
-            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-sm border border-yellow-200 p-3">
-                <p class="text-yellow-600 text-xs font-medium">
-                    @if($periode == 'hari')
-                        Penjualan ({{ \Carbon\Carbon::createFromFormat('Y-m-d', $tanggal)->format('d F') }})
-                    @elseif($periode == '7hari')
-                        Penjualan (7 Hari)
-                    @elseif($periode == 'bulan')
-                        Penjualan (Bulan)
-                    @else
-                        Penjualan Total
-                    @endif
-                </p>
-                <p class="text-2xl font-bold text-yellow-900 mt-1">Rp {{ number_format($penjualanPeriode ?? 0, 0, ',', '.') }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">total transaksi</p>
-            </div>
-
-            <!-- Card 3: Kandang Aktif -->
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-sm border border-purple-200 p-3">
-                <p class="text-purple-600 text-xs font-medium">Kandang Aktif</p>
-                <p class="text-2xl font-bold text-purple-900 mt-1">{{ $jumlahKandang ?? 0 }}</p>
-                <p class="text-gray-600 text-xs mt-0.5">unit</p>
-            </div>
-
-        </div>
-
-        <!-- Metrics KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- HDP Card -->
-            <div class="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg shadow-sm border border-sky-200 p-3">
-                <p class="text-sky-600 text-xs font-medium">Rata-rata HDP</p>
-                <p class="text-2xl font-bold text-sky-900 mt-1">{{ number_format($avgHDPPeriode ?? 0, 2) }}%</p>
-                <p class="text-gray-600 text-xs mt-0.5">Periode Dipilih</p>
-            </div>
-
-            <!-- HHP Card -->
-            <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg shadow-sm border border-cyan-200 p-3">
-                <p class="text-cyan-600 text-xs font-medium">Rata-rata HHP</p>
-                <p class="text-2xl font-bold text-cyan-900 mt-1">{{ number_format($avgHHPPeriode ?? 0, 2) }}%</p>
-                <p class="text-gray-600 text-xs mt-0.5">Periode Dipilih</p>
-            </div>
-
-            <!-- Mortality Card -->
-            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-sm border border-red-200 p-3">
-                <p class="text-red-600 text-xs font-medium">Rata-rata Mortality</p>
-                <p class="text-2xl font-bold text-red-900 mt-1">{{ number_format($avgMortalityPeriode ?? 0, 2) }}%</p>
-                <p class="text-gray-600 text-xs mt-0.5">Periode Dipilih</p>
-            </div>
-        </div>
-
-        <!-- Status Card -->
-        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg shadow-sm p-3 border border-emerald-200">
-            <p class="text-emerald-600 text-xs font-medium">Status Sistem</p>
-            <p class="text-lg font-bold text-emerald-900 mt-1">✅ Aktif</p>
-            <p class="text-gray-600 text-xs mt-0.5">semua sistem berjalan</p>
         </div>
 
         <!-- Charts Section -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 mt-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">
                 Produksi 
                 @if($periode == 'hari')

@@ -9,27 +9,165 @@ use App\Models\Penjualan;
 use App\Models\ProduksiTelur;
 use App\Models\StokTelur;
 use App\Services\StockService;
+use App\Services\PenjualanReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PenjualanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $penjualan = Penjualan::with(['user', 'detail' => function($q) {
+        // Period filter for analytics
+        $periode = $request->periode ?? 'bulan';
+        $bulan = (int) ($request->bulan ?? now()->month);
+        $tahun = (int) ($request->tahun ?? now()->year);
+
+        // Determine date range based on periode
+        if ($periode === 'bulan') {
+            $startDate = \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->startOfDay();
+            $endDate = $startDate->copy()->endOfMonth()->endOfDay();
+        } elseif ($periode === '3bulan') {
+            $endDate = now()->endOfDay();
+            $startDate = $endDate->copy()->subMonths(3)->startOfDay();
+        } elseif ($periode === '6bulan') {
+            $endDate = now()->endOfDay();
+            $startDate = $endDate->copy()->subMonths(6)->startOfDay();
+        } elseif ($periode === 'semua') {
+            $endDate = now()->endOfDay();
+            $startDate = \Carbon\Carbon::createFromDate(2020, 1, 1)->startOfDay();
+        } else {
+            $endDate = now()->endOfDay();
+            $startDate = $endDate->copy()->subMonths(1)->startOfDay();
+        }
+
+        // Query detail tabel dengan filter periode
+        $query = Penjualan::select('id', 'user_id', 'tanggal_jual', 'nama_pembeli', 'total_harga')
+            ->with([
+                'user:id,name',
+                'detail' => function($q) {
+                    $q->select('id', 'penjualan_id', 'harga_telur_id', 'jumlah_butir', 'jumlah_jual', 'jumlah_kg', 'satuan_jual', 'harga_satuan', 'subtotal', 'harga_per_kg_saat_jual', 'harga_per_butir_saat_jual')
+                       ->with('hargaTelur:id,jenis_harga,harga_per_kg,harga_per_butir');
+                }
+            ])
+            ->whereBetween('tanggal_jual', [$startDate, $endDate]);
+
+        $penjualan = $query->latest('tanggal_jual')
+            ->paginate($request->per_page ?? 50);
+
+        // Calculate KPI data
+        $kpiQuery = Penjualan::with(['detail' => function($q) {
             $q->with('hargaTelur');
         }])
-            ->latest('tanggal_jual')
-            ->paginate(10);
+            ->whereBetween('tanggal_jual', [$startDate, $endDate]);
 
-        return view('penjualan.index', compact('penjualan'));
+        $allPenjualan = $kpiQuery->get();
+        $totalTransaksi = $allPenjualan->count();
+        $totalButir = $allPenjualan->pluck('detail')->flatten()->sum('jumlah_butir');
+        $totalKg = $allPenjualan->pluck('detail')->flatten()->sum('jumlah_kg');
+        $totalHarga = $allPenjualan->sum('total_harga');
+
+        // Produksi dalam periode yang sama
+        $totalProduktButir = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->sum('jumlah_butir');
+        $totalProduktKg = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->sum('jumlah_kg');
+
+        // Get konversi factor
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+
+        // Calculate stock telur (opening + production - sales)
+        $stockService = new StockService();
+        $openingButir = $stockService->calculateAvailableStock(
+            \Carbon\Carbon::parse($startDate)->subDay()->startOfDay(),
+            \Carbon\Carbon::parse($startDate)->subDay()->endOfDay()
+        );
+        $stockholTelur = (int) ($openingButir + $totalProduktButir - $totalButir);
+        $stockholTelurKg = $stockholTelur / $konversi;
+
+        // Chart data - use unified report service to match laporan.penjualan
+        $reportService = new PenjualanReportService();
+        $chartData = $reportService->preparePenjualanChartByHargaWithStock($allPenjualan, $startDate, $endDate);
+
+        return view('penjualan.index', compact(
+            'penjualan', 'totalTransaksi', 'totalButir', 'totalKg', 'totalHarga',
+            'totalProduktButir', 'totalProduktKg', 'stockholTelur', 'stockholTelurKg',
+            'periode', 'bulan', 'tahun', 'chartData'
+        ));
+    }
+
+    private function preparePenjualanChart($penjualan, $startDate, $endDate)
+    {
+        // Group by tanggal
+        $groupedByDate = $penjualan->groupBy(function($item) {
+            return $item->tanggal_jual->format('d-m-Y');
+        });
+
+        $labels = [];
+        $salesData = [];
+        $productionData = [];
+
+        // Get production data per date
+        $productionByDate = ProduksiTelur::whereBetween('tanggal_produksi', [$startDate, $endDate])
+            ->selectRaw('DATE(tanggal_produksi) as tgl, SUM(jumlah_butir) as total_butir')
+            ->groupByRaw('DATE(tanggal_produksi)')
+            ->get()
+            ->keyBy('tgl');
+
+        // Build chart data
+        $currentDate = $startDate->copy();
+        while ($currentDate <= $endDate) {
+            $dateStr = $currentDate->format('d-m');
+            $labels[] = $dateStr;
+
+            // Sales for this date
+            $dateKey = $currentDate->format('d-m-Y');
+            $daySales = $groupedByDate[$dateKey] ?? collect();
+            $dayTotal = $daySales->sum('total_harga') / 1000000; // Convert to millions
+            $salesData[] = round($dayTotal, 2);
+
+            // Production for this date
+            $dateFull = $currentDate->format('Y-m-d');
+            $dayProduction = $productionByDate[$dateFull]->total_butir ?? 0;
+            $productionData[] = $dayProduction;
+
+            $currentDate->addDay();
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Penjualan (Juta Rp)',
+                    'data' => $salesData,
+                    'borderColor' => '#3b82f6',
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                    'borderWidth' => 2,
+                    'fill' => true,
+                    'yAxisID' => 'y',
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Produksi (Butir)',
+                    'data' => $productionData,
+                    'borderColor' => '#10b981',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                    'borderWidth' => 2,
+                    'fill' => true,
+                    'yAxisID' => 'y1',
+                    'tension' => 0.4,
+                ],
+            ]
+        ];
     }
 
     public function create()
     {
         $hargaTelur = HargaTelur::aktif()->get();
+        
+        // Fetch konversi setting untuk frontend
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
 
-        return view('penjualan.create', compact('hargaTelur'));
+        return view('penjualan.create', compact('hargaTelur', 'konversi'));
     }
 
     public function store(Request $request)
@@ -61,10 +199,15 @@ class PenjualanController extends Controller
 
         $totalButirDijual = 0;
         foreach ($request->items as $item) {
-            // ALWAYS cast jumlah_butir to integer (eggs are discrete units, not decimals)
-            $jumlahButir = !empty($item['jumlah_butir']) 
-                ? (int) round($item['jumlah_butir'])
-                : (int) round($item['jumlah_kg'] * $konversi);
+            // FIXED: Use jumlah_jual directly based on satuan
+            $satuan = $item['satuan_jual'];
+            $jumlahJual = (float) $item['jumlah_jual'];
+            
+            if ($satuan === 'butir') {
+                $jumlahButir = (int) round($jumlahJual);
+            } else {
+                $jumlahButir = (int) round($jumlahJual * $konversi);
+            }
             $totalButirDijual += $jumlahButir;
         }
 
@@ -91,33 +234,38 @@ class PenjualanController extends Controller
             foreach ($request->items as $item) {
                 $harga = HargaTelur::findOrFail($item['harga_telur_id']);
                 
-                // Use jumlah_butir or calculate from jumlah_kg, ALWAYS as integer
-                $jumlahButir = !empty($item['jumlah_butir']) 
-                    ? (int) round($item['jumlah_butir'])
-                    : (int) round($item['jumlah_kg'] * $konversi);
+                // FIXED: Use jumlah_jual as the actual quantity in declared satuan
+                $satuan = $item['satuan_jual'];
+                $jumlahJual = (float) $item['jumlah_jual']; // Actual quantity user input
+                
+                // Calculate jumlah_butir based on satuan
+                if ($satuan === 'butir') {
+                    // User input is in butir - use it directly!
+                    $jumlahButir = (int) round($jumlahJual);
+                    $jumlahKg = round($jumlahButir / $konversi, 3);
+                } else {
+                    // User input is in kg - use it directly!
+                    $jumlahKg = round($jumlahJual, 3);
+                    $jumlahButir = (int) round($jumlahJual * $konversi);
+                }
                 
                 $totalButirDijual += $jumlahButir;
                 
                 // Determine unit price
-                $hargaSatuan = $item['satuan_jual'] === 'kg'
+                $hargaSatuan = $satuan === 'kg'
                     ? $harga->harga_per_kg
                     : $harga->harga_per_butir;
 
-                // Calculate kg from butir
-                $jumlahKg = round($jumlahButir / $konversi, 3);
-                    
-                // For kg unit, jumlah_jual is already in decimal (e.g., 1.024 kg)
-                // So subtotal = jumlah (kg) × harga_per_kg
-                $subtotal = $item['jumlah_jual'] * $hargaSatuan;
+                // Subtotal: quantity (in declared satuan) × price
+                $subtotal = $jumlahJual * $hargaSatuan;
                 
                 $total += $subtotal;
 
-                // Create detail penjualan - jumlah_butir is INTEGER
-                // IMPORTANT: Save the actual price used at time of sale
+                // Create detail penjualan
                 DetailPenjualan::create([
                     'penjualan_id'   => $penjualan->id,
                     'harga_telur_id' => $item['harga_telur_id'],
-                    'satuan_jual'    => $item['satuan_jual'],
+                    'satuan_jual'    => $satuan,
                     'jumlah_jual'    => $item['jumlah_jual'],
                     'jumlah_butir'   => $jumlahButir,  // INTEGER - no decimals
                     'jumlah_kg'      => round($jumlahKg, 3),
@@ -132,13 +280,8 @@ class PenjualanController extends Controller
             // Update penjualan total
             $penjualan->update(['total_harga' => $total]);
             
-            // CRITICAL: Decrement stok_telur saat penjualan ditambah
-            $stok = StokTelur::first();
-            if ($stok) {
-                $stok->decrement('stok_butir', $totalButirDijual);
-                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
-                $stok->save();
-            }
+            // Note: Stock is now calculated dynamically via StockService, 
+            // no manual updates to StokTelur table needed
         });
 
         return redirect()->route('penjualan.index')
@@ -155,7 +298,11 @@ class PenjualanController extends Controller
     {
         $penjualan = Penjualan::with('detail')->findOrFail($id);
         $hargaTelur = HargaTelur::where('status', 'aktif')->get();
-        return view('penjualan.edit', compact('penjualan', 'hargaTelur'));
+        
+        // Fetch konversi setting untuk frontend
+        $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
+        
+        return view('penjualan.edit', compact('penjualan', 'hargaTelur', 'konversi'));
     }
 
     public function update(Request $request, string $id)
@@ -188,10 +335,15 @@ class PenjualanController extends Controller
         
         $totalButirDijual = 0;
         foreach ($request->items as $item) {
-            // ALWAYS cast jumlah_butir to integer
-            $jumlahButir = !empty($item['jumlah_butir']) 
-                ? (int) round($item['jumlah_butir'])
-                : (int) round($item['jumlah_kg'] * $konversi);
+            // FIXED: Use jumlah_jual directly based on satuan
+            $satuan = $item['satuan_jual'];
+            $jumlahJual = (float) $item['jumlah_jual'];
+            
+            if ($satuan === 'butir') {
+                $jumlahButir = (int) round($jumlahJual);
+            } else {
+                $jumlahButir = (int) round($jumlahJual * $konversi);
+            }
             $totalButirDijual += $jumlahButir;
         }
 
@@ -220,22 +372,31 @@ class PenjualanController extends Controller
             foreach ($request->items as $item) {
                 $harga = HargaTelur::findOrFail($item['harga_telur_id']);
                 
-                // Use jumlah_butir or calculate from jumlah_kg, ALWAYS as integer
-                $jumlahButir = !empty($item['jumlah_butir']) 
-                    ? (int) round($item['jumlah_butir'])
-                    : (int) round($item['jumlah_kg'] * $konversi);
+                // FIXED: Use jumlah_jual as the actual quantity in declared satuan
+                $satuan = $item['satuan_jual'];
+                $jumlahJual = (float) $item['jumlah_jual']; // Actual quantity user input
                 
-                $hargaSatuan = $item['satuan_jual'] === 'kg'
+                // Calculate jumlah_butir based on satuan
+                if ($satuan === 'butir') {
+                    // User input is in butir - use it directly!
+                    $jumlahButir = (int) round($jumlahJual);
+                    $jumlahKg = round($jumlahButir / $konversi, 3);
+                } else {
+                    // User input is in kg - use it directly!
+                    $jumlahKg = round($jumlahJual, 3);
+                    $jumlahButir = (int) round($jumlahJual * $konversi);
+                }
+                
+                $hargaSatuan = $satuan === 'kg'
                     ? $harga->harga_per_kg
                     : $harga->harga_per_butir;
 
-                $jumlahKg = round($jumlahButir / $konversi, 3);
-                    
-                $subtotal = $item['jumlah_jual'] * $hargaSatuan;
+                // Subtotal: quantity (in declared satuan) × price
+                $subtotal = $jumlahJual * $hargaSatuan;
                 
                 $total += $subtotal;
 
-                // IMPORTANT: Save the actual price used at time of sale
+                // Create detail penjualan
                 DetailPenjualan::create([
                     'penjualan_id'   => $penjualan->id,
                     'harga_telur_id' => $item['harga_telur_id'],
@@ -253,23 +414,8 @@ class PenjualanController extends Controller
             // Update total harga
             $penjualan->update(['total_harga' => $total]);
             
-            // CRITICAL: Update stok_telur based on difference (old vs new)
-            // If new > old: more eggs sold, decrement stok_telur more
-            // If new < old: fewer eggs sold, increment stok_telur back
-            $butirDifference = $totalButirDijual - $oldTotalButir;  // positive = more sold, negative = fewer sold
-            
-            $stok = StokTelur::first();
-            if ($stok && $butirDifference !== 0) {
-                if ($butirDifference > 0) {
-                    // Need to decrement more eggs
-                    $stok->decrement('stok_butir', $butirDifference);
-                } else {
-                    // Return eggs back (fewer sold now)
-                    $stok->increment('stok_butir', abs($butirDifference));
-                }
-                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
-                $stok->save();
-            }
+            // Note: Stock is now calculated dynamically via StockService,
+            // no manual updates to StokTelur table needed
         });
 
         return redirect()->route('penjualan.show', $penjualan)
@@ -281,21 +427,12 @@ class PenjualanController extends Controller
         $penjualan = Penjualan::findOrFail($id);
 
         DB::transaction(function () use ($penjualan) {
-            // Calculate total butir yang akan dihapus
-            $totalButirDihapus = $penjualan->detail()->sum('jumlah_butir');
-            
             // Delete details and penjualan
             $penjualan->detail()->delete();
             $penjualan->delete();
             
-            // CRITICAL: Increment stok_telur kembali saat penjualan dihapus
-            $konversi = (float) Pengaturan::where('kunci', 'konversi_butir_per_kg')->value('nilai') ?: 16;
-            $stok = StokTelur::first();
-            if ($stok) {
-                $stok->increment('stok_butir', $totalButirDihapus);
-                $stok->stok_kg = round($stok->stok_butir / $konversi, 3);
-                $stok->save();
-            }
+            // Note: Stock is now calculated dynamically via StockService,
+            // no manual updates to StokTelur table needed
         });
 
         return redirect()->route('penjualan.index')

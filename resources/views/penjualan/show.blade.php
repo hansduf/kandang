@@ -87,7 +87,7 @@
                 Kembali
             </a>
             <a href="{{ route('penjualan.edit', $penjualan) }}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
-                ✏️ Edit Transaksi
+                <i class="fas fa-pen text-blue-600"></i> Edit Transaksi
             </a>
             <form action="{{ route('penjualan.destroy', $penjualan) }}" method="POST" class="inline">
                 @csrf @method('DELETE')

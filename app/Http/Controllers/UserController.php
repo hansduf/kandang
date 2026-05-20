@@ -31,7 +31,7 @@ class UserController extends Controller
             'email'     => 'required|email|unique:users',
             'password'  => 'required|string|min:6|confirmed',
             'role'      => 'required|in:pemilik,pekerja',
-            'kandang_id' => 'nullable|exists:kandang,id',
+            'kandang_id' => 'nullable|exists:kandangs,id',
         ]);
 
         $user = User::create([
@@ -71,17 +71,25 @@ class UserController extends Controller
             'name'      => 'required|string|max:255',
             'username'  => 'required|string|max:100|unique:users,username,' . $user->id,
             'email'     => 'required|email|unique:users,email,' . $user->id,
+            'password'  => 'nullable|string|min:8|confirmed',
             'role'      => 'required|in:pemilik,pekerja',
-            'kandang_id' => 'nullable|exists:kandang,id',
+            'kandang_id' => 'nullable|exists:kandangs,id',
         ]);
 
-        $user->update([
+        $updateData = [
             'name'       => $request->name,
             'username'   => $request->username,
             'email'      => $request->email,
             'role'       => $request->role,
             'kandang_id' => $request->role === 'pekerja' ? $request->kandang_id : null,
-        ]);
+        ];
+
+        // Only hash password if provided
+        if ($request->filled('password')) {
+            $updateData['password'] = bcrypt($request->password);
+        }
+
+        $user->update($updateData);
 
         // Sync role
         $user->syncRoles($request->role);

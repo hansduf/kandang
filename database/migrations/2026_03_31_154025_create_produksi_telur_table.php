@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('produksi_telur', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kandang_id')->constrained('kandang')->cascadeOnDelete();
+            $table->foreignId('kandang_id')->constrained('kandangs')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->date('tanggal_produksi');
             $table->enum('satuan_input', ['butir', 'kg']);

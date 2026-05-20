@@ -1,0 +1,45 @@
+@startuml
+title Kelola Harga Telur - Activity Diagram
+
+|Pemilik|
+start
+:Buka Halaman Harga Telur;
+
+|Sistem|
+:Tampilkan Daftar Harga;
+:Status: Aktif & Hangus;
+
+|Pemilik|
+:Pilih Menu;
+
+if (Tambah Harga?) then (Ya)
+  :Input Jenis Harga;
+  :Input Harga per KG;
+  :Input Harga per Butir;
+  :Input Tanggal Berlaku;
+  
+elseif (Edit Harga?) then (Ya)
+  :Pilih Harga Aktif;
+  :Edit Data Harga;
+  
+elseif (Tandai Hangus?) then (Ya)
+  :Pilih Harga Aktif;
+  :Confirm Tandai Hangus;
+  
+else (Lihat History)
+  :View History Harga;
+endif
+
+|Sistem|
+:Proses & Validasi;
+:Update Database;
+:Return Notifikasi;
+
+|Pemilik|
+if (Lanjut Operasi?) then (Ya)
+  :Kembali ke Pilih Menu;
+else (Tidak)
+  :Logout;
+  stop
+endif
+@enduml

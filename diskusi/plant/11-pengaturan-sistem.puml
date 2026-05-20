@@ -1,0 +1,30 @@
+@startuml
+|Pemilik|
+start
+:Buka Pengaturan Sistem;
+|Sistem|
+:Query Semua Setting;
+:Tampilkan Daftar Setting;
+|Pemilik|
+:Lihat Nilai Setting Terkini;
+:Lihat Keterangan Setting;
+:Pilih Setting untuk Diubah;
+:Input Nilai Baru;
+if (Konversi Butir/KG?) then (Ya)
+  :Edit Ratio Konversi;
+else (Setting Lain)
+  :Edit Nilai Sesuai Tipe;
+endif
+:Klik Simpan;
+|Sistem|
+:Validasi Nilai;
+if (Valid?) then (Ya)
+  :Update Setting di Database;
+  :Pesan "Setting Updated";
+else (Tidak)
+  :Tampilkan Error;
+endif
+|Pemilik|
+:Selesai;
+end
+@enduml

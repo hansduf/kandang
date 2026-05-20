@@ -1,0 +1,6 @@
+HASIL PENGUJIAN SISTEM - HANS JAYA POULTRY
+=============================================
+Waktu: 2026-04-22 11:24:38
+
+Total: 24 | Passed: 23 | Failed: 1 | Rate: 95.83%
+

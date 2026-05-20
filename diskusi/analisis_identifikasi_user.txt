@@ -1,0 +1,360 @@
+ANALISIS IDENTIFIKASI USER SISTEM
+==================================
+
+Berdasarkan dokumentasi sistem dan konteks bisnis Hans Jaya Poultry Farm, berikut analisis LENGKAP tentang identifikasi user:
+
+═══════════════════════════════════════════════════════════════════════════════
+1. USER/ACTOR YANG TERLIBAT
+═══════════════════════════════════════════════════════════════════════════════
+
+A. PEKERJA KANDANG (Farm Worker)
+   ┌─────────────────────────────────────────────────────────────────────────┐
+   │ IDENTITAS                                                               │
+   ├─────────────────────────────────────────────────────────────────────────┤
+   │ • Nama              : Pekerja/Pengelola Kandang (Farm Handler)           │
+   │ • Jumlah            : 1 - N (tergantung jumlah kandang & shift)          │
+   │ • Lokasi utama      : Di lapangan/lokasi kandang                        │
+   │ • Hubungan dengan   : Pemilik peternakan (atasan langsung)             │
+   │   sistem            :                                                   │
+   └─────────────────────────────────────────────────────────────────────────┘
+
+   DESKRIPSI DETIL:
+   Pekerja kandang adalah tenaga kerja operasional yang bekerja langsung 
+   merawat, memberi makan, mati-matian ayam, dan melakukan pengawasan harian 
+   di lokasi kandang. Mereka bertanggung jawab untuk:
+   
+   1. Observasi/Monitoring harian
+      - Mengamati ayam setiap hari
+      - Mencatat dampak produksi (kesehatan ayam, kondisi kandang, dll)
+   
+   2. Pencatatan Produksi Telur
+      - Mengumpulkan/menghitung telur yang diproduksi per hari
+      - Menimbang atau menghitung dalam satuan butir
+      - Mencatat data produksi ke sistem
+   
+   3. Pelaporan ke atasan (Pemilik)
+      - Menyampaikan informasi kondisi kandang
+      - Melaporkan masalah/kendala
+
+   KONTEKS BISNIS:
+   • Biasanya bekerja shift pagi, siang, atau malam tergantung kebijakan
+   • Mungkin ada 1-2 pekerja per kandang
+   • Umumnya memiliki pendidikan dasar-menengah
+   • Bekerja berdasarkan upah harian atau bulanan
+
+
+B. PEMILIK PETERNAKAN (Farm Owner / Manager)
+   ┌─────────────────────────────────────────────────────────────────────────┐
+   │ IDENTITAS                                                               │
+   ├─────────────────────────────────────────────────────────────────────────┤
+   │ • Nama              : Pemilik/Pengelola Usaha Hans Jaya Poultry Farm   │
+   │ • Jumlah            : 1 (bisa juga Multiple if ada co-owner)            │
+   │ • Lokasi utama      : Kantor/rumah + lapangan (mobile)                  │
+   │ • Hubungan dengan   : Owner dari usaha (decision maker)                │
+   │   sistem            :                                                   │
+   └─────────────────────────────────────────────────────────────────────────┘
+
+   DESKRIPSI DETIL:
+   Pemilik peternakan adalah pengambil keputusan utama yang mengelola aspek 
+   bisnis dan operasional peternakan. Bertanggung jawab untuk:
+   
+   1. Perencanaan & Pengelolaan Bisnis
+      - Menentukan strategi produksi
+      - Memantau kinerja kandang
+      - Analisis profitabilitas
+   
+   2. Pengelolaan Master Data
+      - Menambah/mengubah/menghapus kandang
+      - Menentukan/mengubah harga telur (berdasarkan pasar)
+      - Mengelola data pengguna/pekerja
+   
+   3. Pencatatan Transaksi Penjualan
+      - Mencatat setiap transaksi penjualan
+      - Menentukan jumlah, satuan, dan harga
+      - Validasi stok sebelum menjual
+   
+   4. Analisis & Laporan
+      - Melihat laporan produksi per kandang
+      - Melihat laporan penjualan & revenue
+      - Membuat keputusan berdasarkan data
+   
+   5. Monitoring Real-time
+      - Melihat stok telur terkini
+      - Memonitor produksi dari berbagai kandang
+      - Alert jika ada masalah
+
+   KONTEKS BISNIS:
+   • Umumnya berpendidikan minimal SMA, banyak yang sarjana
+   • Sudah familiar dengan teknologi/komputer
+   • Membutuhkan dashboard dan laporan yang detail
+   • Akses dibutuhkan kapan saja (mobile-friendly)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2. PERBANDINGAN KARAKTERISTIK USER
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────┬──────────────────────┬──────────────────────┐
+│ Aspek                       │ Pekerja Kandang      │ Pemilik Peternakan   │
+├─────────────────────────────┼──────────────────────┼──────────────────────┤
+│ Pendidikan                  │ SMP-SMA              │ SMA-Sarjana          │
+│ Kemampuan Teknis            │ Basic                │ Intermediate-Advanced│
+│ Frekuensi Akses             │ 1-2x/hari (shift)    │ 1-3x/hari (ad-hoc)   │
+│ Waktu Akses                 │ Pagi/Siang/Malam     │ Kapan saja           │
+│ Lokasi Akses                │ Di lapangan          │ Kantor/rumah/mobile  │
+│ Device                      │ Desktop/Tablet       │ Desktop/Laptop/Mobile│
+│ Tujuan Utama                │ Input data sederhana │ Analisis & keputusan │
+│ Data yang diakses           │ Produksi kandang dlm │ Semua kandang, semua │
+│                             │ tanggung jawabnya    │ data                 │
+│ Operasi utama               │ CREATE (input)       │ READ/CREATE/UPDATE   │
+│                             │ READ (lihat historis)│ /DELETE (seluruh)    │
+└─────────────────────────────┴──────────────────────┴──────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3. PERMISSION & ACCESS CONTROL MATRIX
+═══════════════════════════════════════════════════════════════════════════════
+
+Feature/Function Access:
+┌──────────────────────────────────┬───────────────────┬──────────────────┐
+│ Feature/Use Case                 │ Pekerja Kandang   │ Pemilik Peternakan│
+├──────────────────────────────────┼───────────────────┼──────────────────┤
+│ LOGIN / LOGOUT                   │        ✓          │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ DASHBOARD                        │        ✓*         │         ✓         │
+│  • Kandang sendiri               │      Limited       │       Full        │
+│  • Statistik produksi            │      Limited       │       Full        │
+│  • Stok real-time                │      Limited       │       Full        │
+│─────────────────────────────────────────────────────────────────────────│
+│ INPUT PRODUKSI TELUR             │        ✓          │         ✗         │
+│  • Input harian                  │      Kandang dlm   │         -         │
+│  • Pilih satuan (butir/kg)       │      tanggung jw   │         -         │
+│  • Riwayat (view only)           │        ✓          │         -         │
+│─────────────────────────────────────────────────────────────────────────│
+│ LIHAT RIWAYAT PRODUKSI           │        ✓*         │         ✓         │
+│  • Filter/sort                   │    Kandangnya      │      All          │
+│  • Edit (jika ada kesalahan)     │        ✗          │         ✓         │
+│  • Hapus                         │        ✗          │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ LIHAT STOK TELUR (INVENTORY)     │        ✓          │         ✓         │
+│  • Current stok                  │        ✓          │         ✓         │
+│  • Breakdown per kandang         │      Kandangnya    │      All          │
+│─────────────────────────────────────────────────────────────────────────│
+│ KELOLA KANDANG                   │        ✗          │         ✓         │
+│  • Tambah kandang                │         -         │         ✓         │
+│  • Edit kandang                  │         -         │         ✓         │
+│  • Hapus kandang                 │         -         │         ✓         │
+│  • View kandang detail           │        ✓          │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ KELOLA HARGA TELUR               │        ✗          │         ✓         │
+│  • Tambah harga baru             │         -         │         ✓         │
+│  • Lihat riwayat harga           │        Lihat       │         ✓         │
+│  • Update/hapus (tidak boleh!)   │         ✗         │    ✓ (create only)│
+│─────────────────────────────────────────────────────────────────────────│
+│ INPUT PENJUALAN TELUR            │        ✗          │         ✓         │
+│  • Catat transaksi               │         -         │         ✓         │
+│  • Validasi stok                 │         -         │    ✓ (automatic)   │
+│  • Print/nota                    │         -         │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ LAPORAN PRODUKSI                 │        ✗          │         ✓         │
+│  • View tabel/grafik             │         -         │         ✓         │
+│  • Filter periode                │         -         │         ✓         │
+│  • Export PDF/Excel              │         -         │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ LAPORAN PENJUALAN                │        ✗          │         ✓         │
+│  • View tabel/grafik             │         -         │         ✓         │
+│  • Filter periode                │         -         │         ✓         │
+│  • Export PDF/Excel              │         -         │         ✓         │
+│  • Lihat revenue/profit          │         -         │         ✓         │
+│─────────────────────────────────────────────────────────────────────────│
+│ KELOLA PENGATURAN SISTEM         │        ✗          │         ✓         │
+│  • Atur rasio konversi          │         -         │         ✓         │
+│  • Kelola user/pekerja          │         -         │         ✓         │
+│  • Pengaturan sistem lainnya    │         -         │         ✓         │
+└──────────────────────────────────┴───────────────────┴──────────────────┘
+
+* = Limited access (hanya data kandang sendiri atau subset data tertentu)
+✓ = Akses penuh
+✗ = Tidak ada akses
+- = Fitur tidak relevan untuk role ini
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4. DATA SCOPE PER USER ROLE
+═══════════════════════════════════════════════════════════════════════════════
+
+A. PEKERJA KANDANG
+
+   Data yang bisa diakses:
+   ✓ Dashboard kandang sendiri
+   ✓ Riwayat produksi kandang sendiri
+   ✓ Lihat informasi kandang yang ditugaskan
+   ✓ Lihat stok telur (informatif)
+
+   Data yang TIDAK bisa diakses:
+   ✗ Kandang lain (bukan tanggung jawabnya)
+   ✗ Data penjualan
+   ✗ Data harga telur detail (hanya lihat saat input)
+   ✗ Data pengguna lain
+   ✗ Pengaturan sistem
+   ✗ Laporan finansial
+
+   Implementasi:
+   - Query WHERE user_id = logged_in_user AND kandang_id IN (assigned_kandangs)
+   - Middleware untuk filter data per role
+   - Scope di Model Eloquent untuk auto-filter
+
+
+B. PEMILIK PETERNAKAN
+
+   Data yang bisa diakses:
+   ✓ SEMUA candang (unlimited)
+   ✓ SEMUA data produksi
+   ✓ SEMUA data penjualan
+   ✓ SEMUA harga telur (historis)
+   ✓ SEMUA laporan & analytics
+   ✓ Data pengguna/pekerja
+   ✓ Pengaturan sistem
+   ✓ Dashboard keseluruhan
+
+   Data yang tidak bisa diakses:
+   ✗ Password pengguna lain (hash only)
+   ✗ Log sistem/audit trail (opsional)
+
+   Implementasi:
+   - Minimal scope/WHERE clause
+   - Full dashboard access
+   - Admin-level permissions
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5. USER JOURNEY & WORKFLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─ PEKERJA KANDANG ──────────────────────────────────────────────────────────┐
+│                                                                             │
+│  1. Datang ke kandang (pagi/siang/malam)                                   │
+│      ↓                                                                      │
+│  2. Login ke sistem (di kantin/kantor kecil kantong kandang)               │
+│      ↓                                                                      │
+│  3. Lihat dashboard → Info kandang & stok terkini                          │
+│      ↓                                                                      │
+│  4. **INPUT PRODUKSI TELUR HARIAN** (Main task)                           │
+│      - Input tanggal                                                       │
+│      - Pilih sensasi (butir atau kg)                                       │
+│      - Input jumlah hasil produksi                                         │
+│      - Sistem auto-convert & update stok                                   │
+│      ↓                                                                      │
+│  5. (Optional) Lihat riwayat produksi 7 hari terakhir                      │
+│      ↓                                                                      │
+│  6. Logout                                                                 │
+│      ↓                                                                      │
+│  7. Lapor ke Pemilik (verbal atau via chat)                               │
+│                                                                             │
+│  Frekuensi: 1-2 kali per hari (tergantung shift)                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ PEMILIK PETERNAKAN ───────────────────────────────────────────────────────┐
+│                                                                             │
+│  MORNING CHECK (Pagi):                                                     │
+│  1. Login ke sistem (dari di rumah/kantor)                                 │
+│      ↓                                                                      │
+│  2. Lihat Dashboard → Overview produksi semua kandang & stok                │
+│      ↓                                                                      │
+│  3. Lihat alert (stok menipis? ada masalah?)                               │
+│      ↓                                                                      │
+│  ─ Jika ada masalah → Call pekerja kandang                                 │
+│      ↓                                                                      │
+│  MIDDAY/AFTERNOON TASKS:                                                   │
+│  4. INPUT PENJUALAN (jika ada pembeli)                                     │
+│      - Pilih items yang akan dijual (butir/kg)                             │
+│      - Input jumlah                                                         │
+│      - Sistem auto-konversi & validate stok                                │
+│      - Sistem auto-decrement stok                                          │
+│      - Catat harga (lookup dari master harga)                              │
+│      - Simpan sebagai transaksi                                            │
+│      ↓                                                                      │
+│  5. (As needed) Update harga telur (berdasarkan pasar)                     │
+│      ↓                                                                      │
+│  6. (As needed) Kelola kandang (tambah/edit/hapus)                         │
+│      ↓                                                                      │
+│  EVENING/WEEKLY TASKS:                                                     │
+│  7. Lihat Laporan Produksi                                                 │
+│      - Filter periode (harian/mingguan/bulanan)                            │
+│      - Lihat grafik produksi per kandang                                   │
+│      - Analisis trend                                                      │
+│      - Export ke PDF/Excel                                                 │
+│      ↓                                                                      │
+│  8. Lihat Laporan Penjualan                                                │
+│      - Filter periode                                                      │
+│      - Lihat revenue & profit                                              │
+│      - Analisis customer/penjual                                           │
+│      - Export untuk arsip                                                  │
+│      ↓                                                                      │
+│  9. Logout                                                                 │
+│                                                                             │
+│  Frekuensi: 1-3 kali per hari (flexible)                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+6. TECHNICAL IMPLEMENTATION NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+Database Relations:
+• users table → role (enum: 'pekerja', 'pemilik')
+• users table → kandang_id (nullable, pekerja assigned to 1+ kandang)
+• produksi_telur → user_id (who input), kandang_id
+• penjualan → user_id (who recorded), multiple items per transaksi
+• harga_telur → berlaku_dari (historis, never deleted)
+• kandang → user_id (optional, for track who manage?), aktif (boolean)
+
+Laravel Implementation:
+1. Authentication
+   - Use Spatie/Laravel Permission package
+   - Define 2 roles: 'pekerja', 'pemilik'
+
+2. Authorization (Middleware/Policy)
+   - Middleware untuk role-based redirect (route groups)
+   - Policy untuk resource authorization
+   - Scope Query untuk auto-filter data per role
+
+3. Model Relationships
+   - User hasMany ProduksiTelur, Kandang, Penjualan
+   - User belongsToMany Kandang (pivot with role info)
+   - Kandang hasMany ProduksiTelur, Penjualan
+   - Scopes: ->forUser(auth()->user())
+
+4. Frontend
+   - Blade conditional (@can directive) untuk show/hide menu
+   - Form validation per role
+   - Dashboard templates per role
+
+
+═══════════════════════════════════════════════════════════════════════════════
+7. PERTANYAAN UNTUK DISKUSI
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Apakah ada kemungkinan satu Pekerja ditugaskan ke MULTIPLE kandang?
+   → Mempengaruhi scope filter data
+
+2. Apakah ada Supervisor/Team Lead di atas Pekerja?
+   → Jika ya, perlu role ke-3
+
+3. Apakah ada sistem Approval untuk Penjualan?
+   → Misal Pekerja input, Pemilik approve?
+
+4. Apakah Pekerja bisa edit produksi yang sudah diinput?
+   → Sekarang assume: TIDAK, hanya Pemilik
+
+5. Berapa jumlah Pekerja & Kandang aktif saat ini?
+   → Untuk estimasi load/performance
+
+6. Apakah ada Customer/Supplier Management?
+   → Atau simple input saja tanpa merchant record?
+
+7. Apakah perlu Audit Log/Activity Log?
+   → Untuk track siapa mengubah apa & kapan
+

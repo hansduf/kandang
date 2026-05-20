@@ -96,38 +96,18 @@
             </div>
         </div>
 
-        <!-- Grafik Utama Multi-Metric -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-lg font-bold text-gray-900 mb-2">Grafik Utama - Semua Indikator Produksi</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                @if(request('kandang_id'))
-                    Menampilkan detail produksi untuk: <strong>{{ request('kandang_id', 'Unknown') }}</strong>
-                    (HDP, HHP, Mortality, Ayam Mati)
-                @else
-                    Menampilkan data dari <strong>SEMUA KANDANG</strong> yang digabung
-                    (Total Produksi, Rata-rata HDP, HHP, Mortality, Total Ayam Mati)
-                @endif
-            </p>
-            <canvas id="chartUtama" height="80"></canvas>
-        </div>
-
-        <!-- Grafik Perbandingan Kandang -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-lg font-bold text-gray-900 mb-2">Perbandingan Produksi Antar Kandang</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                Membandingkan produksi (butir) dari <strong>SETIAP KANDANG</strong> secara terpisah
-                untuk melihat performa relatif setiap unit
-            </p>
-            <canvas id="chartComparison" height="80"></canvas>
-        </div>
-
-        <!-- Grafik Per Kandang (Tabs) -->
+        <!-- Grafik Production Analytics (Unified Tabs) -->
         <div class="bg-white rounded-xl shadow-sm">
             <div class="border-b border-gray-200">
                 <div class="flex overflow-x-auto">
+                    <button onclick="switchTab('semua')" 
+                        class="tab-btn px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:border-blue-500 transition border-b-2 border-blue-600 text-blue-600"
+                        data-kandang="semua">
+                        📊 Semua Kandang
+                    </button>
                     @foreach($kandangs as $idx => $kandang)
                         <button onclick="switchTab({{ $kandang->id }})" 
-                            class="tab-btn px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:border-blue-500 transition {{ $idx == 0 ? 'border-b-2 border-blue-600 text-blue-600' : '' }}"
+                            class="tab-btn px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:border-blue-500 transition"
                             data-kandang="{{ $kandang->id }}">
                             {{ $kandang->nama_kandang }}
                         </button>
@@ -135,8 +115,19 @@
                 </div>
             </div>
             <div class="p-6">
+                <!-- Tab: Semua Kandang -->
+                <div id="tab-semua" class="tab-content">
+                    <h3 class="text-md font-bold text-gray-900 mb-4">📊 Grafik Utama - Semua Indikator Produksi</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Menampilkan ringkasan produksi dari <strong>SEMUA KANDANG</strong> yang digabung
+                        (Total Produksi, Rata-rata HDP, HHP, Mortality, Total Ayam Mati)
+                    </p>
+                    <canvas id="chartUtama" height="80"></canvas>
+                </div>
+
+                <!-- Tabs: Individual Kandang -->
                 @foreach($kandangs as $idx => $kandang)
-                    <div id="tab-{{ $kandang->id }}" class="tab-content" style="{{ $idx == 0 ? '' : 'display:none' }}">
+                    <div id="tab-{{ $kandang->id }}" class="tab-content" style="display:none">
                         <h3 class="text-md font-bold text-gray-900 mb-4">Detail Produksi: {{ $kandang->nama_kandang }}</h3>
                         <canvas id="chart-kandang-{{ $kandang->id }}" height="80"></canvas>
                     </div>
@@ -316,31 +307,6 @@
                         display: true,
                         position: 'top',
                     },
-                }
-            }
-        });
-
-        // Chart Perbandingan
-        const dataComparison = {!! json_encode($chartDataComparison) !!};
-        new Chart(document.getElementById('chartComparison'), {
-            type: 'line',
-            data: {
-                labels: dataComparison.labels,
-                datasets: dataComparison.datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                    },
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                    }
                 }
             }
         });

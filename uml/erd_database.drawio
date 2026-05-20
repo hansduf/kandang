@@ -1,0 +1,116 @@
+<mxfile host="65bd71144e">
+    <diagram id="hans-jaya-poultry-erd" name="Hans Jaya Poultry - Database Model">
+        <mxGraphModel dx="680" dy="1485" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3200" pageHeight="2200" background="#ffffff" math="0" shadow="1">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Hans Jaya Poultry - Integrated Data Model" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="10" width="800" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="users" value="users" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="70" width="220" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="users-attr" value="◉ id (PK)&#xa;+ name: string&#xa;+ email (unique)&#xa;+ password&#xa;+ role (enum)&#xa;+ kandang_id (FK)&#xa;---&#xa;→ kandangs (many)&#xa;→ produksi (many)&#xa;→ penjualan (many)&#xa;→ harga (many)" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="users" vertex="1">
+                    <mxGeometry y="20" width="220" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandangs" value="kandangs" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="70" width="230" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="kandangs-attr" value="◉ id (PK)&#xa;+ nama_kandang&#xa;+ jumlah_ayam (int)&#xa;+ status (enum)&#xa;+ pic_id (FK)→User&#xa;---&#xa;→ produksi (many)&#xa;→ stok (one)&#xa;Physical locations&#xa;with supervisor&#xa;(pic_id)" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="kandangs" vertex="1">
+                    <mxGeometry y="20" width="230" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" style="edgeStyle=none;html=1;" edge="1" parent="kandangs" source="kandangs-attr" target="kandangs-attr">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi" value="produksi_telur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="70" width="260" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="produksi-attr" value="◉ id (PK)&#xa;+ kandang_id (FK)&#xa;+ user_id (FK)&#xa;+ tanggal_produksi&#xa;+ jumlah_butir/kg&#xa;+ ayam_hidup&#xa;+ hdp/hhp/mortality&#xa;---&#xa;✓IMMUTABLE (audit)&#xa;Health metrics" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="produksi" vertex="1">
+                    <mxGeometry y="20" width="260" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga" value="harga_telur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#FFF3E0;strokeColor=#F57C00;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="70" width="260" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="harga-attr" value="◉ id (PK)&#xa;+ jenis_harga (enum)&#xa;+ harga_per_kg/butir&#xa;+ tanggal_berlaku&#xa;+ status (aktif|hangus)&#xa;+ user_id (FK)&#xa;---&#xa;→ detail_penjualan&#xa;Price history with&#xa;temporal versioning" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="harga" vertex="1">
+                    <mxGeometry y="20" width="260" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok" value="stok_telur" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#E0F2F1;strokeColor=#00796B;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="70" width="230" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="stok-attr" value="◉ id (PK)&#xa;+ stok_butir (int)&#xa;+ stok_kg (decimal)&#xa;+ updated_at&#xa;---&#xa;⚠ CALCULATED FIELD&#xa;Production - Sales&#xa;via StockService&#xa;Real-time" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="stok" vertex="1">
+                    <mxGeometry y="20" width="230" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan" value="penjualan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="330" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="penjualan-attr" value="◉ id (PK)&#xa;+ user_id (FK)&#xa;+ tanggal_jual&#xa;+ nama_pembeli&#xa;+ total_harga (calc)&#xa;---&#xa;→ detail_penjualan&#xa;Sales transactions" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="penjualan" vertex="1">
+                    <mxGeometry y="20" width="240" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail" value="detail_penjualan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="330" width="270" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="detail-attr" value="◉ id (PK)&#xa;+ penjualan_id (FK)&#xa;+ harga_telur_id (FK)&#xa;+ satuan_jual (enum)&#xa;+ jumlah_butir/kg&#xa;+ harga_satuan&#xa;+ subtotal, jam&#xa;---&#xa;✓IMMUTABLE&#xa;Price snapshot" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="detail" vertex="1">
+                    <mxGeometry y="20" width="270" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan" value="pengaturan" style="swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=20;fillColor=#FCE4EC;strokeColor=#C2185B;strokeWidth=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="330" width="240" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="pengaturan-attr" value="◉ id (PK)&#xa;+ kunci (unique)&#xa;+ nilai (string)&#xa;+ tipe_data (enum)&#xa;+ keterangan&#xa;---&#xa;System settings" style="text;align=left;verticalAlign=top;fontSize=8;spacingLeft=3;spacingRight=3;overflow=hidden;" parent="pengaturan" vertex="1">
+                    <mxGeometry y="20" width="240" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#2E7D32;strokeWidth=2;dashed=0;" parent="1" source="users" target="kandangs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1l" value="assigns to" style="text;fontSize=8;html=1;align=center;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="150" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERone;startArrow=ERmany;strokeColor=#F57C00;strokeWidth=2;dashed=1;" parent="1" source="kandangs" target="users" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="310" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r2l" value="pic_id" style="text;fontSize=7;html=1;align=center;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="260" width="30" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#2E7D32;strokeWidth=2;" parent="1" source="users" target="produksi" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#2E7D32;strokeWidth=2;" parent="1" source="kandangs" target="produksi" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERone;startArrow=ERone;strokeColor=#00796B;strokeWidth=2;" parent="1" source="kandangs" target="stok" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1400" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r5l" value="tracks" style="text;fontSize=8;html=1;align=center;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="285" width="35" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#F57C00;strokeWidth=2;" parent="1" source="users" target="harga" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r7" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#7B1FA2;strokeWidth=2;" parent="1" source="users" target="penjualan" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#7B1FA2;strokeWidth=2;" parent="1" source="penjualan" target="detail" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8l" value="contains" style="text;fontSize=8;html=1;align=center;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="610" y="400" width="50" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;strokeColor=#F57C00;strokeWidth=2;" parent="1" source="harga" target="detail" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1050" y="320" as="sourcePoint"/>
+                        <mxPoint x="970" y="330" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r9l" value="snapshotted in" style="text;fontSize=7;html=1;align=center;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="310" width="60" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="lgd" value="Legend: ◉=PK | +=Column | →=Relation | ✓=Immutable | ⚠=Calculated | Green=Master | Orange=Pricing | Purple=Transactions | Teal=Inventory | Pink=Config" style="text;fontSize=9;align=center;fillColor=#f8f8f8;strokeColor=#999;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="560" width="1550" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

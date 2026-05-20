@@ -1,0 +1,73 @@
+@startuml
+|Pemilik|
+start
+:Klik Tambah Penjualan;
+|Sistem|
+:Tampilkan Form Penjualan;
+|Pemilik|
+:Input Tanggal Jual;
+:Input Jam Jual;
+:Input Nama Pembeli;
+:Klik Tambah Item;
+|Sistem|
+:Tampilkan Form Input Item;
+|Pemilik|
+:Pilih Harga dari Master;
+:Pilih Satuan Jual;
+:Input Jumlah;
+|Sistem|
+:Auto-Konversi Satuan;
+:Auto-Calculate Subtotal;
+:Snapshot Harga Saat Jual;
+|Pemilik|
+:Review Item;
+:Klik Simpan Item;
+|Sistem|
+:Tambah Item ke Daftar;
+|Pemilik|
+if (Tambah Item Lagi?) then (Ya)
+  :Klik Tambah Item;
+  |Sistem|
+  :Tampilkan Form Input Item;
+  |Pemilik|
+  :Pilih Harga dari Master;
+  :Pilih Satuan Jual;
+  :Input Jumlah;
+  |Sistem|
+  :Auto-Konversi Satuan;
+  :Auto-Calculate Subtotal;
+  :Snapshot Harga Saat Jual;
+  |Pemilik|
+  :Review Item;
+  :Klik Simpan Item;
+  |Sistem|
+  :Tambah Item ke Daftar;
+else (Tidak)
+endif
+|Pemilik|
+:Klik Proses Penjualan;
+|Sistem|
+:Validasi Stok Total;
+if (Stok Cukup?) then (Ya)
+  :Start Database Transaction;
+  :Kurangi Stok Telur;
+  :Simpan Data Penjualan;
+  :Simpan Semua Detail Items;
+  if (Commit Sukses?) then (Ya)
+    :Pesan Sukses;
+    :Tampilkan Invoice;
+  else (Gagal)
+    :Rollback Transaksi;
+    :Tampilkan Error;
+  endif
+else (Tidak)
+  :Tampilkan Warning "Stok Tidak Cukup";
+  |Pemilik|
+  if (Lanjut?) then (Ya)
+    :Kurangi Jumlah Item;
+  else (Tidak)
+    :Batal Penjualan;
+  endif
+endif
+end
+@enduml

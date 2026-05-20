@@ -1,0 +1,12 @@
+HASIL PENGUJIAN SISTEM - HANS JAYA POULTRY
+=============================================
+Waktu: 2026-04-22 11:16:54
+
+Total: 17 | Passed: 11 | Failed: 6 | Rate: 64.71%
+
+ERRORS:
+- 1.1.1: User owner@test.local tidak ditemukan atau password salah
+- Produksi tests: SQLSTATE[HY000]: General error: 1364 Field 'user_id' doesn't have a default value (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: hans_jaya_poultry, SQL: insert into `produksi_telur` (`kandang_id`, `tanggal_produksi`, `jumlah_butir`, `jumlah_kg`, `hdp`, `hhp`, `updated_at`, `created_at`) values (1, 2026-04-22 00:00:00, 500, 31.25, 95, 92, 2026-04-22 11:16:53, 2026-04-22 11:16:53))
+- Penjualan tests: SQLSTATE[HY000]: General error: 1364 Field 'tanggal_jual' doesn't have a default value (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: hans_jaya_poultry, SQL: insert into `penjualan` (`total_harga`, `user_id`, `updated_at`, `created_at`) values (50000, 1, 2026-04-22 11:16:53, 2026-04-22 11:16:53))
+- Stock tests: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'kandang_id' in 'where clause' (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: hans_jaya_poultry, SQL: select * from `stok_telur` where `kandang_id` = 1 order by `created_at` desc limit 1)
+- Pricing tests: SQLSTATE[HY000]: General error: 1364 Field 'harga_per_kg' doesn't have a default value (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: hans_jaya_poultry, SQL: insert into `harga_telur` (`harga_per_butir`, `status`, `updated_at`, `created_at`) values (500, aktif, 2026-04-22 11:16:54, 2026-04-22 11:16:54))
